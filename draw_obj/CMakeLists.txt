@@ -18,6 +18,9 @@ ENDIF()
 
 project(assignment1_draw_obj)
 
+configure_file(configuration/root_directory.h.in configuration/root_directory.h)
+include_directories(${CMAKE_BINARY_DIR}/configuration)
+
 # glfw
 IF(MSVC)
   set(GLFW_LIBRARY    ../glfw/src/Release/glfw3.lib)
@@ -38,7 +41,7 @@ set(HEADER_INCLUDE_DIR headers)
 get_filename_component(HEADER_INCLUDE_DIR ${HEADER_INCLUDE_DIR} ABSOLUTE)
 
 #glad
-set(GLAD_INCLUDE_DIR "../glad4/include")
+set(GLAD_INCLUDE_DIR "../glad3/include")
 get_filename_component(GLAD_INCLUDE_DIR ${GLAD_INCLUDE_DIR} ABSOLUTE)
 
 #glm
@@ -46,12 +49,10 @@ set(GLM_INCLUDE_DIR "../glm")
 get_filename_component(GLM_INCLUDE_DIR ${GLM_INCLUDE_DIR} ABSOLUTE)
 
 # required packages opengl/assimp
-find_package(GLM REQUIRED)
-message(STATUS "GLM included at ${GLM_INCLUDE_DIR}")
 find_package(OpenGL REQUIRED)
 message(STATUS "Found GLFW3 in ${GLFW3_INCLUDE_DIR}")
-find_package(ASSIMP REQUIRED)
-message(STATUS "Found ASSIMP in ${ASSIMP_INCLUDE_DIR}")
+
+
 ######################################################
 include_directories (${INCLUDE_DIR}) 
 include_directories(
@@ -64,8 +65,10 @@ include_directories(
 )
 
 add_executable(${PROJECT_NAME}
-  ../glad4/include/glad/glad.h 
-  ../glad4/src/glad.c
+  ../glad3/include/glad/glad.h 
+  ../glad3/src/glad.c
+  1.model_loading.fs
+  1.model_loading.vs
   main.cpp
 )
 

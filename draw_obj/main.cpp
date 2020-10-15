@@ -1,6 +1,6 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <iostream>
+
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -11,7 +11,7 @@
 #include <camera.h>
 #include <model.h>
 
-
+#include <iostream>
 #define STB_IMAGE_IMPLEMENTATION    
 #include "stb_image.h"
 
@@ -85,9 +85,12 @@ int main()
 
     // load models
     // -----------
-    Model ourModel(FileSystem::getPath("objects/backpack/backpack.obj"));
 
-    //Model ourModel("backpack.obj");
+
+
+    Model ourModel(FileSystem::getPath("resources/objects/backpack/backpack.obj"));
+
+    //Model ourModel("resource/objects/backpack/backpack.obj");
 
     // draw in wireframe
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
