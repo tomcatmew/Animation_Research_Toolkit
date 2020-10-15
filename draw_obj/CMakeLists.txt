@@ -29,7 +29,7 @@ get_filename_component(GLFW_INCLUDE_DIR ../glfw/include ABSOLUTE)
 
 # headers
 set(HEADER_INCLUDE_DIR /headers)
-get_filename_component(HEADER_INCLUDE_DIR ${(HEADER_INCLUDE_DIR } ABSOLUTE)
+get_filename_component(HEADER_INCLUDE_DIR ${HEADER_INCLUDE_DIR} ABSOLUTE)
 
 #glad
 set(GLAD_INCLUDE_DIR "../glad4/include")
