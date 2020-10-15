@@ -28,9 +28,9 @@ get_filename_component(GLFW_LIBRARY ${GLFW_LIBRARY} ABSOLUTE)
 get_filename_component(GLFW_INCLUDE_DIR ../glfw/include ABSOLUTE)
 
 #assimp
-set(ASSIMP_LIBRARY    ../assimp/contrib/zlib/Release/zlibstatic.lib)
+set(ASSIMP_LIBRARY   ../assimp-3.3.1/build/code/Debug/assimp-vc140-mt.lib )
 get_filename_component(ASSIMP_LIBRARY ${ASSIMP_LIBRARY} ABSOLUTE)
-set(ASSIMP_INCLUDE_DIR "../assimp/include")
+set(ASSIMP_INCLUDE_DIR "../assimp-3.3.1/include")
 get_filename_component(ASSIMP_INCLUDE_DIR ${ASSIMP_INCLUDE_DIR} ABSOLUTE)
 
 # headers
