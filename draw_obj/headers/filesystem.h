@@ -5,6 +5,9 @@
 #include <cstdlib>
 
 
+const char* logl_root = "../resource";
+
+
 class FileSystem
 {
 private:

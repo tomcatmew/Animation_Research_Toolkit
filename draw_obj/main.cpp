@@ -85,7 +85,7 @@ int main()
 
     // load models
     // -----------
-    Model ourModel(FileSystem::getPath("resources/objects/backpack/backpack.obj"));
+    Model ourModel(FileSystem::getPath("objects/backpack/backpack.obj"));
 
     //Model ourModel("backpack.obj");
 

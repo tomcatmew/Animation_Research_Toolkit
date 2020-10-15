@@ -35,6 +35,10 @@ get_filename_component(HEADER_INCLUDE_DIR ${(HEADER_INCLUDE_DIR } ABSOLUTE)
 set(GLAD_INCLUDE_DIR "../glad4/include")
 get_filename_component(GLAD_INCLUDE_DIR ${GLAD_INCLUDE_DIR} ABSOLUTE)
 
+#glm
+set(GLM_INCLUDE_DIR "../glm")
+get_filename_component(GLM_INCLUDE_DIR ${GLM_INCLUDE_DIR} ABSOLUTE)
+
 # opengl
 find_package(OpenGL REQUIRED)
 
@@ -45,6 +49,7 @@ include_directories(
   ${GLFW_INCLUDE_DIR}
   ${HEADER_INCLUDE_DIR}
   ${GLAD_INCLUDE_DIR}
+  ${GLM_INCLUDE_DIR}
 )
 
 add_executable(${PROJECT_NAME}
