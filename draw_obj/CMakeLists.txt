@@ -28,7 +28,7 @@ get_filename_component(GLFW_LIBRARY ${GLFW_LIBRARY} ABSOLUTE)
 get_filename_component(GLFW_INCLUDE_DIR ../glfw/include ABSOLUTE)
 
 # headers
-set(HEADER_INCLUDE_DIR /headers)
+set(HEADER_INCLUDE_DIR headers)
 get_filename_component(HEADER_INCLUDE_DIR ${HEADER_INCLUDE_DIR} ABSOLUTE)
 
 #glad
@@ -53,7 +53,7 @@ include_directories(
 )
 
 add_executable(${PROJECT_NAME}
-  ../glad4/include/glad/glad.h   
+  ../glad4/include/glad/glad.h 
   ../glad4/src/glad.c
   main.cpp
 )
