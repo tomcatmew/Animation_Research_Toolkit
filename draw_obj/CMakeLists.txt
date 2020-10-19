@@ -19,6 +19,8 @@ ENDIF()
 project(assignment1_draw_obj)
 
 configure_file(configuration/root_directory.h.in configuration/root_directory.h)
+configure_file(configuration/assimp-vc140-mt.dll Debug/assimp-vc140-mt.dll)
+configure_file(configuration/assimp-vc140-mt.lib Debug/assimp-vc140-mt.lib)
 include_directories(${CMAKE_BINARY_DIR}/configuration)
 
 # glfw

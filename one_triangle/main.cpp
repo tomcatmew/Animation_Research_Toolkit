@@ -21,7 +21,7 @@ int main(void)
   glfwSetErrorCallback(error_callback);
   if (!glfwInit())
     exit(EXIT_FAILURE);
-  window = glfwCreateWindow(840, 680, "Simple example", NULL, NULL);
+  window = glfwCreateWindow(840, 680, "Assignment_1_One_Triangle", NULL, NULL);
   if (!window)
   {
     glfwTerminate();

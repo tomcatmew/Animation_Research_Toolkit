@@ -12,6 +12,7 @@
 #include <model.h>
 
 #include <iostream>
+
 #define STB_IMAGE_IMPLEMENTATION    
 #include "stb_image.h"
 
@@ -49,7 +50,7 @@ int main()
 
     // glfw window creation
     // --------------------
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Assignment_1_Draw_OBJ", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -73,22 +74,29 @@ int main()
     }
 
     // tell stb_image.h to flip loaded texture's on the y-axis (before loading model).
-    stbi_set_flip_vertically_on_load(true);
+    stbi_set_flip_vertically_on_load(false);
 
     // configure global opengl state
     // -----------------------------
     glEnable(GL_DEPTH_TEST);
 
+    // this is generating a simple txt file to see where is my default path location 
+
+    ofstream file2("relative_path_test.txt");
+
+    if (file2.is_open()) {
+        file2 << "Test file";
+    }
+    file2.close();
     // build and compile shaders
-    // -------------------------
-    Shader ourShader("1.model_loading.vs", "1.model_loading.fs");
+    Shader ourShader("vertex.vs", "fragment.fs");
 
     // load models
     // -----------
 
 
-
-    Model ourModel(FileSystem::getPath("resources/objects/backpack/backpack.obj"));
+    //Model ourModel(FileSystem::getPath("resources/objects/backpack/backpack.obj"));
+    Model ourModel(FileSystem::getPath("resources/objects/chair/chair.obj"));
 
     //Model ourModel("resource/objects/backpack/backpack.obj");
 
