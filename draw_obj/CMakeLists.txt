@@ -18,9 +18,15 @@ ENDIF()
 
 project(assignment1_draw_obj)
 
+# copy the necessary files to build directory
 configure_file(configuration/root_directory.h.in configuration/root_directory.h)
-configure_file(configuration/assimp-vc140-mt.dll Debug/assimp-vc140-mt.dll)
-configure_file(configuration/assimp-vc140-mt.lib Debug/assimp-vc140-mt.lib)
+configure_file(configuration/assimp-vc140-mt.dll Debug/assimp-vc140-mt.dll COPYONLY)
+configure_file(configuration/assimp-vc140-mt.lib Debug/assimp-vc140-mt.lib COPYONLY)
+configure_file(fragment.fs fragment.fs COPYONLY)
+configure_file(vertex.vs vertex.vs COPYONLY)
+configure_file(fragment.fs Debug/fragment.fs COPYONLY)
+configure_file(vertex.vs Debug/vertex.vs COPYONLY)
+
 include_directories(${CMAKE_BINARY_DIR}/configuration)
 
 # glfw
@@ -69,8 +75,6 @@ include_directories(
 add_executable(${PROJECT_NAME}
   ../glad3/include/glad/glad.h 
   ../glad3/src/glad.c
-  1.model_loading.fs
-  1.model_loading.vs
   main.cpp
 )
 
