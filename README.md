@@ -17,4 +17,7 @@ Build the Cmake file in draw_obj folder  and run in Debug mode
 ```
 cmake -S . -B build
 ```
+Handcraft obj loader
+![Image of Draw_obj](https://github.com/tomcatmew/Research_Assignment_1/blob/main/screenshot/draw_obj2.png)
+By Assimp
 ![Image of Draw_obj](https://github.com/tomcatmew/Research_Assignment_1/blob/main/screenshot/draw_obj.png)
