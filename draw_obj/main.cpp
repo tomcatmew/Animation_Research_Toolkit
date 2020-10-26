@@ -13,7 +13,6 @@ using namespace glm;
 
 
 #include <shader.hpp>
-#include <texture.hpp>
 #include <controls.hpp>
 #include <objloader.hpp>
 

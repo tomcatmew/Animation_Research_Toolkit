@@ -41,10 +41,10 @@ get_filename_component(GLFW_LIBRARY ${GLFW_LIBRARY} ABSOLUTE)
 get_filename_component(GLFW_INCLUDE_DIR ../glfw/include ABSOLUTE)
 
 #assimp
-set(ASSIMP_LIBRARY   ../assimp-3.3.1/build/code/Debug/assimp-vc140-mt.lib )
-get_filename_component(ASSIMP_LIBRARY ${ASSIMP_LIBRARY} ABSOLUTE)
-set(ASSIMP_INCLUDE_DIR "../assimp-3.3.1/include")
-get_filename_component(ASSIMP_INCLUDE_DIR ${ASSIMP_INCLUDE_DIR} ABSOLUTE)
+#set(ASSIMP_LIBRARY   ../assimp-3.3.1/build/code/Debug/assimp-vc140-mt.lib )
+#get_filename_component(ASSIMP_LIBRARY ${ASSIMP_LIBRARY} ABSOLUTE)
+#set(ASSIMP_INCLUDE_DIR "../assimp-3.3.1/include")
+#get_filename_component(ASSIMP_INCLUDE_DIR ${ASSIMP_INCLUDE_DIR} ABSOLUTE)
 
 # headers
 set(HEADER_INCLUDE_DIR headers)
@@ -81,7 +81,6 @@ include_directories (${INCLUDE_DIR})
 include_directories(
   ${OPENGL_INCLUDE_DIR}
   ${GLFW_INCLUDE_DIR}
-  ${ASSIMP_INCLUDE_DIR}
   ${HEADER_INCLUDE_DIR}
   ${LOADER_INCLUDE_DIR}
   ${GLAD_INCLUDE_DIR}
@@ -117,7 +116,6 @@ IF(APPLE)
     ${COCOA_LIBRARY}
     ${IOKIT_LIBRARY}
     ${COREVIDEO_LIBRARY}
-    ${ASSIMP_LIBRARY}
   )
 ELSEIF(UNIX)
   set(CMAKE_CXX_FLAGS "-Wall -Wno-deprecated-declarations -g")
@@ -125,7 +123,6 @@ ELSEIF(UNIX)
     ${OPENGL_LIBRARY}
     ${GLEW_LIBRARY}
     ${GLFW_LIBRARY}
-    ${ASSIMP_LIBRARY}
     -lrt -lm -ldl -lX11 -lpthread -lxcb -lXau -lXdmcp
   )
 ELSEIF(WIN32)    
@@ -133,13 +130,11 @@ ELSEIF(WIN32)
     ${GLFW_LIBRARY}
     ${GLEW_LIBRARY}
     ${OPENGL_LIBRARY}
-    ${ASSIMP_LIBRARY}
   )
 ELSEIF(WIN64)    
   target_link_libraries(${PROJECT_NAME}     
     ${GLFW_LIBRARY}
     ${GLEW_LIBRARY}
     ${OPENGL_LIBRARY}
-    ${ASSIMP_LIBRARY}
   )
 ENDIF()
