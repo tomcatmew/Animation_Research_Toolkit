@@ -19,13 +19,15 @@ ENDIF()
 project(assignment1_draw_obj)
 
 # copy the necessary files to build directory
-configure_file(configuration/root_directory.h.in configuration/root_directory.h)
-configure_file(configuration/assimp-vc140-mt.dll Debug/assimp-vc140-mt.dll COPYONLY)
-configure_file(configuration/assimp-vc140-mt.lib Debug/assimp-vc140-mt.lib COPYONLY)
-configure_file(fragment.fs fragment.fs COPYONLY)
-configure_file(vertex.vs vertex.vs COPYONLY)
-configure_file(fragment.fs Debug/fragment.fs COPYONLY)
-configure_file(vertex.vs Debug/vertex.vs COPYONLY)
+#configure_file(configuration/root_directory.h.in configuration/root_directory.h)
+#configure_file(configuration/assimp-vc140-mt.dll Debug/assimp-vc140-mt.dll COPYONLY)
+#configure_file(configuration/assimp-vc140-mt.lib Debug/assimp-vc140-mt.lib COPYONLY)
+configure_file(fragment.fragmentshader fragment.fragmentshader COPYONLY)
+configure_file(vertex.vertexshader vertex.vertexshader COPYONLY)
+configure_file(fragment.fragmentshader Debug/fragment.fragmentshader COPYONLY)
+configure_file(vertex.vertexshader Debug/vertex.vertexshader COPYONLY)
+configure_file(bunny.obj bunny.obj COPYONLY)
+configure_file(bunny.obj Debug/bunny.obj COPYONLY)
 
 include_directories(${CMAKE_BINARY_DIR}/configuration)
 
@@ -48,6 +50,10 @@ get_filename_component(ASSIMP_INCLUDE_DIR ${ASSIMP_INCLUDE_DIR} ABSOLUTE)
 set(HEADER_INCLUDE_DIR headers)
 get_filename_component(HEADER_INCLUDE_DIR ${HEADER_INCLUDE_DIR} ABSOLUTE)
 
+#loader
+set(LOADER_INCLUDE_DIR loader)
+get_filename_component(LOADER_INCLUDE_DIR ${LOADER_INCLUDE_DIR} ABSOLUTE)
+
 #glad
 set(GLAD_INCLUDE_DIR "../glad3/include")
 get_filename_component(GLAD_INCLUDE_DIR ${GLAD_INCLUDE_DIR} ABSOLUTE)
@@ -56,10 +62,19 @@ get_filename_component(GLAD_INCLUDE_DIR ${GLAD_INCLUDE_DIR} ABSOLUTE)
 set(GLM_INCLUDE_DIR "../glm")
 get_filename_component(GLM_INCLUDE_DIR ${GLM_INCLUDE_DIR} ABSOLUTE)
 
+#glew
+set(GLEW_LIBRARY   ../glew-1.13.0/build/Debug/GLEW_1130.lib)
+get_filename_component(GLEW_LIBRARY ${GLEW_LIBRARY} ABSOLUTE)
+set(GLEW_INCLUDE_DIR "../glew-1.13.0/include")
+get_filename_component(GLEW_INCLUDE_DIR ${GLEW_INCLUDE_DIR} ABSOLUTE)
+
 # required packages opengl/assimp
 find_package(OpenGL REQUIRED)
 message(STATUS "Found GLFW3 in ${GLFW3_INCLUDE_DIR}")
 
+add_definitions(
+	-DGLEW_STATIC
+)
 
 ######################################################
 include_directories (${INCLUDE_DIR}) 
@@ -68,13 +83,23 @@ include_directories(
   ${GLFW_INCLUDE_DIR}
   ${ASSIMP_INCLUDE_DIR}
   ${HEADER_INCLUDE_DIR}
+  ${LOADER_INCLUDE_DIR}
   ${GLAD_INCLUDE_DIR}
   ${GLM_INCLUDE_DIR}
+  ${GLEW_INCLUDE_DIR}
 )
 
 add_executable(${PROJECT_NAME}
   ../glad3/include/glad/glad.h 
   ../glad3/src/glad.c
+  loader/shader.cpp
+  loader/shader.hpp
+  loader/texture.cpp
+  loader/texture.hpp
+  loader/objloader.cpp
+  loader/objloader.hpp
+  loader/controls.cpp
+  loader/controls.hpp
   main.cpp
 )
 
@@ -88,6 +113,7 @@ IF(APPLE)
   target_link_libraries(${PROJECT_NAME}
     ${OPENGL_LIBRARY}
     ${GLFW_LIBRARY}
+    ${GLEW_LIBRARY}
     ${COCOA_LIBRARY}
     ${IOKIT_LIBRARY}
     ${COREVIDEO_LIBRARY}
@@ -97,6 +123,7 @@ ELSEIF(UNIX)
   set(CMAKE_CXX_FLAGS "-Wall -Wno-deprecated-declarations -g")
   target_link_libraries(${PROJECT_NAME}
     ${OPENGL_LIBRARY}
+    ${GLEW_LIBRARY}
     ${GLFW_LIBRARY}
     ${ASSIMP_LIBRARY}
     -lrt -lm -ldl -lX11 -lpthread -lxcb -lXau -lXdmcp
@@ -104,12 +131,14 @@ ELSEIF(UNIX)
 ELSEIF(WIN32)    
   target_link_libraries(${PROJECT_NAME}     
     ${GLFW_LIBRARY}
+    ${GLEW_LIBRARY}
     ${OPENGL_LIBRARY}
     ${ASSIMP_LIBRARY}
   )
 ELSEIF(WIN64)    
   target_link_libraries(${PROJECT_NAME}     
     ${GLFW_LIBRARY}
+    ${GLEW_LIBRARY}
     ${OPENGL_LIBRARY}
     ${ASSIMP_LIBRARY}
   )
