@@ -3,7 +3,8 @@
 #include <stdlib.h>
 #include <vector>
 
-#include <GL/glew.h>
+//#include <GL/glew.h>
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 GLFWwindow* window;
 #include <glm/glm.hpp>
@@ -44,14 +45,12 @@ int main(void)
 	}
 	glfwMakeContextCurrent(window);
 
-	// GLEW
-	glewExperimental = true; // Needed for core profile
-	if (glewInit() != GLEW_OK) {
-		fprintf(stderr, "Failed to initialize GLEW\n");
-		getchar();
-		glfwTerminate();
+	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+	{
+		std::cout << "Failed to initialize GLAD" << std::endl;
 		return -1;
 	}
+
 
 	// Ensure we can capture the escape key being pressed below
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
@@ -62,7 +61,7 @@ int main(void)
 	glfwPollEvents();
 	glfwSetCursorPos(window, 1024 / 2, 768 / 2);
 
-	// Dark blue background
+	// blue background
 	glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
 
 	// Enable depth test
@@ -85,12 +84,10 @@ int main(void)
 	GLuint ViewMatrixID = glGetUniformLocation(programID, "V");
 	GLuint ModelMatrixID = glGetUniformLocation(programID, "M");
 
-	// Load the texture
-	//GLuint Texture = loadDDS("xxx.DDS");
-
-	//GLuint TextureID = glGetUniformLocation(programID, "myTextureSampler");
-
-	// Read our .obj file
+	// Read .obj file
+	// return the list of coordinates indices 
+	// A list of vector 3 contains the each vertex coordinate 
+	// drawarry draw triangle go over it
 	std::vector<glm::vec3> vertices;
 	bool res = loadOBJ("bunny.obj", vertices);
 
@@ -132,14 +129,7 @@ int main(void)
 		//vertices attribute buffer 
 		glEnableVertexAttribArray(0);
 		glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-		glVertexAttribPointer(
-			0,                  // attribute
-			3,                  // size
-			GL_FLOAT,           // type
-			GL_FALSE,           // normalized
-			0,                  // stride
-			(void*)0            // array buffer offset
-		);
+		glVertexAttribPointer(0,3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 		// Draw triangle
 		glDrawArrays(GL_TRIANGLES, 0, vertices.size());
 

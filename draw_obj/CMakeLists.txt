@@ -18,10 +18,6 @@ ENDIF()
 
 project(assignment1_draw_obj)
 
-# copy the necessary files to build directory
-#configure_file(configuration/root_directory.h.in configuration/root_directory.h)
-#configure_file(configuration/assimp-vc140-mt.dll Debug/assimp-vc140-mt.dll COPYONLY)
-#configure_file(configuration/assimp-vc140-mt.lib Debug/assimp-vc140-mt.lib COPYONLY)
 configure_file(fragment.fragmentshader fragment.fragmentshader COPYONLY)
 configure_file(vertex.vertexshader vertex.vertexshader COPYONLY)
 configure_file(fragment.fragmentshader Debug/fragment.fragmentshader COPYONLY)
@@ -47,8 +43,8 @@ get_filename_component(GLFW_INCLUDE_DIR ../glfw/include ABSOLUTE)
 #get_filename_component(ASSIMP_INCLUDE_DIR ${ASSIMP_INCLUDE_DIR} ABSOLUTE)
 
 # headers
-set(HEADER_INCLUDE_DIR headers)
-get_filename_component(HEADER_INCLUDE_DIR ${HEADER_INCLUDE_DIR} ABSOLUTE)
+#set(HEADER_INCLUDE_DIR headers)
+#get_filename_component(HEADER_INCLUDE_DIR ${HEADER_INCLUDE_DIR} ABSOLUTE)
 
 #loader
 set(LOADER_INCLUDE_DIR loader)
@@ -63,10 +59,10 @@ set(GLM_INCLUDE_DIR "../glm")
 get_filename_component(GLM_INCLUDE_DIR ${GLM_INCLUDE_DIR} ABSOLUTE)
 
 #glew
-set(GLEW_LIBRARY   ../glew-1.13.0/build/Debug/GLEW_1130.lib)
-get_filename_component(GLEW_LIBRARY ${GLEW_LIBRARY} ABSOLUTE)
-set(GLEW_INCLUDE_DIR "../glew-1.13.0/include")
-get_filename_component(GLEW_INCLUDE_DIR ${GLEW_INCLUDE_DIR} ABSOLUTE)
+#set(GLEW_LIBRARY   ../glew-1.13.0/build/Debug/GLEW_1130.lib)
+#get_filename_component(GLEW_LIBRARY ${GLEW_LIBRARY} ABSOLUTE)
+#set(GLEW_INCLUDE_DIR "../glew-1.13.0/include")
+#get_filename_component(GLEW_INCLUDE_DIR ${GLEW_INCLUDE_DIR} ABSOLUTE)
 
 # required packages opengl/assimp
 find_package(OpenGL REQUIRED)
@@ -81,11 +77,9 @@ include_directories (${INCLUDE_DIR})
 include_directories(
   ${OPENGL_INCLUDE_DIR}
   ${GLFW_INCLUDE_DIR}
-  ${HEADER_INCLUDE_DIR}
   ${LOADER_INCLUDE_DIR}
   ${GLAD_INCLUDE_DIR}
   ${GLM_INCLUDE_DIR}
-  ${GLEW_INCLUDE_DIR}
 )
 
 add_executable(${PROJECT_NAME}
@@ -93,8 +87,6 @@ add_executable(${PROJECT_NAME}
   ../glad3/src/glad.c
   loader/shader.cpp
   loader/shader.hpp
-  loader/texture.cpp
-  loader/texture.hpp
   loader/objloader.cpp
   loader/objloader.hpp
   loader/controls.cpp
@@ -112,7 +104,6 @@ IF(APPLE)
   target_link_libraries(${PROJECT_NAME}
     ${OPENGL_LIBRARY}
     ${GLFW_LIBRARY}
-    ${GLEW_LIBRARY}
     ${COCOA_LIBRARY}
     ${IOKIT_LIBRARY}
     ${COREVIDEO_LIBRARY}
@@ -121,20 +112,17 @@ ELSEIF(UNIX)
   set(CMAKE_CXX_FLAGS "-Wall -Wno-deprecated-declarations -g")
   target_link_libraries(${PROJECT_NAME}
     ${OPENGL_LIBRARY}
-    ${GLEW_LIBRARY}
     ${GLFW_LIBRARY}
     -lrt -lm -ldl -lX11 -lpthread -lxcb -lXau -lXdmcp
   )
 ELSEIF(WIN32)    
   target_link_libraries(${PROJECT_NAME}     
     ${GLFW_LIBRARY}
-    ${GLEW_LIBRARY}
     ${OPENGL_LIBRARY}
   )
 ELSEIF(WIN64)    
   target_link_libraries(${PROJECT_NAME}     
     ${GLFW_LIBRARY}
-    ${GLEW_LIBRARY}
     ${OPENGL_LIBRARY}
   )
 ENDIF()

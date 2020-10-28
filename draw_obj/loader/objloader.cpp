@@ -7,13 +7,6 @@
 
 #include "objloader.hpp"
 
-// - Binary files. 
-// - Animations & bones (includes bones weights)
-// - Multiple UVs
-// - All attributes should be optional, not "forced"
-// - Change a line in the OBJ file and it crashes.
-// - Change another line and you can inject code.
-// - Loading from memory, stream, etc
 
 bool loadOBJ(
 	const char * path, 
