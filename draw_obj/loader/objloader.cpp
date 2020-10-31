@@ -7,7 +7,7 @@
 
 #include "objloader.hpp"
 
-
+//loadOBJ function to load simple obj file 
 bool loadOBJ(
 	const char * path, 
 	std::vector<glm::vec3> & out_vertices
