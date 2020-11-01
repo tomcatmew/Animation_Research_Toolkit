@@ -85,11 +85,12 @@ int main(void)
 	GLuint ModelMatrixID = glGetUniformLocation(programID, "M");
 
 	// Read .obj file
-	// return the list of coordinates indices 
-	// A list of vector 3 contains the each vertex coordinate 
-	// drawarry draw triangle go over it
+	// return the 
+	// vector of vertics 
+	// vector of triangle faces 
 	std::vector<glm::vec3> vertices;
-	bool res = loadOBJ("bunny.obj", vertices);
+	std::vector<unsigned int> triangles;
+	bool res = loadOBJ("bunny.obj", vertices, triangles);
 
 	// Load it into a VBO
 

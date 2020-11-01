@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string>
 #include <cstring>
+#include <iostream>
 
 #include <glm/glm.hpp>
 
@@ -9,15 +10,15 @@
 
 //loadOBJ function to load simple obj file 
 bool loadOBJ(
-	const char * path, 
-	std::vector<glm::vec3> & out_vertices
+	const char* path,
+	std::vector<glm::vec3>& out_vertices,
+	std::vector<unsigned int>& out_triangles
+
 ){
 	printf("Loading OBJ file %s...\n", path);
 
-	std::vector<unsigned int> vertexIndices;
 	std::vector<glm::vec3> temp_vertices; 
-
-
+	std::vector<unsigned int> vertexIndices;
 
 	FILE * file = fopen(path, "r");
 	if( file == NULL ){
@@ -41,11 +42,10 @@ bool loadOBJ(
 			temp_vertices.push_back(vertex);
 		}
 		else if ( strcmp( lineHeader, "f" ) == 0 ){
-			std::string vertex1, vertex2, vertex3;
 			unsigned int vertexIndex[3];
 			int matches = fscanf(file, "%d %d %d/\n", &vertexIndex[0], &vertexIndex[1], &vertexIndex[2]);
 			if (matches != 3){
-				printf("File can't be read by our simple parser :-( Try exporting with other options\n");
+				printf("File can't be read");
 				fclose(file);
 				return false;
 			}
@@ -59,16 +59,32 @@ bool loadOBJ(
 		}
 
 	}
+	std::cout << "print vertex\n";
+	std::cout << temp_vertices.size();
+	std::cout << "\n";
+	for ( int i = 0; i < temp_vertices.size(); i++) {
+		for (int j = 0; j < 3; j++) {
+			std::cout << temp_vertices[i][j];
+			std::cout << "\n";
+		}
 
+	}
+	std::cout << "print indices size is \n";
+	std::cout << vertexIndices.size()/3;
+	std::cout << "\n";
+	for ( int i = 0; i < vertexIndices.size(); i++) {
+		std::cout << vertexIndices[i] << '\n ';
+		std::cout << "\n";
+	}
 	// For each vertex of each triangle
 	for( unsigned int i=0; i<vertexIndices.size(); i++ ){
 		// Get the indices of its attributes
-		unsigned int vertexIndex = vertexIndices[i];
-		// Get the attributes thanks to the index
-		glm::vec3 vertex = temp_vertices[ vertexIndex-1 ];
+		// Get the attributes to the index
+		glm::vec3 vertex = temp_vertices[vertexIndices[i] -1 ];
 		// Put the attributes in buffers
 		out_vertices.push_back(vertex);
 	}
+	out_triangles = vertexIndices;
 	fclose(file);
 	return true;
 }
