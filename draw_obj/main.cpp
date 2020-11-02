@@ -88,16 +88,21 @@ int main(void)
 	// return the 
 	// vector of vertics 
 	// vector of triangle faces 
-	std::vector<glm::vec3> vertices;
+
+	//std::vector<glm::vec3> vertices;
+	std::vector<double> vertices;
 	std::vector<unsigned int> triangles;
+
 	bool res = loadOBJ("bunny.obj", vertices, triangles);
 
 	// Load it into a VBO
-
+	
 	GLuint vertexbuffer;
 	glGenBuffers(1, &vertexbuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), &vertices[0], GL_STATIC_DRAW);
+	//glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), &vertices[0], GL_STATIC_DRAW);
+
+	glBufferData(GL_ARRAY_BUFFER, vertices.size(), &vertices[0], GL_STATIC_DRAW);
 
 	glUseProgram(programID);
 	GLuint LightID = glGetUniformLocation(programID, "LightPosition_worldspace");
@@ -110,6 +115,7 @@ int main(void)
 		// Use our shader
 		glUseProgram(programID);
 
+		// camera program from internet ======================================
 		// Compute the MVP matrix from keyboard and mouse input
 		computeMatricesFromInputs();
 		glm::mat4 ProjectionMatrix = getProjectionMatrix();
@@ -126,6 +132,9 @@ int main(void)
 
 		glm::vec3 lightPos = glm::vec3(14, 20, 54);
 		glUniform3f(LightID, lightPos.x, lightPos.y, lightPos.z);
+		// camera program  ======================================
+
+
 
 		//vertices attribute buffer 
 		glEnableVertexAttribArray(0);
