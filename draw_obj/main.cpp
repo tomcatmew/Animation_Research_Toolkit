@@ -1,167 +1,143 @@
-// Include standard headers
-#include <stdio.h>
-#include <stdlib.h>
-#include <vector>
+// Modified by Yifei Chen for OpenGL review and learning
 
-//#include <GL/glew.h>
-#include <glad/glad.h>
 #include <GLFW/glfw3.h>
-GLFWwindow* window;
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-using namespace glm;
-
-
-#include <shader.hpp>
-#include <controls.hpp>
-#include <objloader.hpp>
-
+#include <cstdlib>
+#include <cstdio>
+#include <vector>
 #include <iostream>
+
+bool loadOBJ(
+	const char* path,
+
+	std::vector<double>& out_vertices,
+	std::vector<unsigned int>& out_triangles
+) {
+	printf("Loading OBJ file %s...\n", path);
+
+
+	//std::vector<double> temp_vertices;
+	std::vector<unsigned int> vertexIndices;
+
+	FILE* file = fopen(path, "r");
+	if (file == NULL) {
+		printf("cannot open the file !\n");
+		getchar();
+		return false;
+	}
+
+	while (1) {
+
+		char lineHeader[128];
+		// read the first word 
+		int res = fscanf(file, "%s", lineHeader);
+		if (res == EOF)
+			break; // EOF = End Of File Quit 
+		// else : parse lineHeader
+
+		if (strcmp(lineHeader, "v") == 0) {
+			double x, y, z;
+			fscanf(file, "%lf %lf %lf\n", &x, &y, &z);
+			std::cout << x << " " << y << " " << z << " " << std::endl;
+			out_vertices.push_back(x);
+			out_vertices.push_back(y);
+			out_vertices.push_back(z);
+		}
+		else if (strcmp(lineHeader, "f") == 0) {
+			unsigned int vertexIndex[3];
+			int matches = fscanf(file, "%d %d %d/\n", &vertexIndex[0], &vertexIndex[1], &vertexIndex[2]);
+			if (matches != 3) {
+				printf("File can't be read");
+				fclose(file);
+				return false;
+			}
+			//std::cout << vertexIndex[0] << " " << vertexIndex[1] << " " << vertexIndex[2] << " " << std::endl;
+			vertexIndices.push_back(vertexIndex[0] - 1 );
+			vertexIndices.push_back(vertexIndex[1] - 1);
+			vertexIndices.push_back(vertexIndex[2] - 1);
+		}
+		else {
+			// comment
+			char stupidBuffer[1000];
+			fgets(stupidBuffer, 1000, file);
+		}
+
+	}
+	//std::cout << temp_vertices[0] << " " << temp_vertices[1] << " " << temp_vertices[2] << std::endl;
+	std::cout << "\n print vertices  index is \n";
+	std::cout << vertexIndices.size() << std::endl;
+
+	out_triangles = vertexIndices;
+	fclose(file);
+	return true;
+}
+
+static void error_callback(int error, const char* description)
+{
+  fputs(description, stderr);
+}
+
+static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+  if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+    glfwSetWindowShouldClose(window, GL_TRUE);
+}
+
 
 int main(void)
 {
-	// Initialise GLFW
-	if (!glfwInit())
-	{
-		fprintf(stderr, "Failed to initialize GLFW\n");
-		getchar();
-		return -1;
+	std::vector<double> points;
+	std::vector<unsigned int> indexs;
+	loadOBJ("bunny.obj", points, indexs);
+
+
+  GLFWwindow* window;
+  glfwSetErrorCallback(error_callback);
+  if (!glfwInit())
+    exit(EXIT_FAILURE);
+  window = glfwCreateWindow(840, 680, "Assignment_1_One_Triangle", NULL, NULL);
+  if (!window)
+  {
+    glfwTerminate();
+    exit(EXIT_FAILURE);
+  }
+
+  glfwMakeContextCurrent(window);
+  glfwSetKeyCallback(window, key_callback);
+
+  while (!glfwWindowShouldClose(window))
+  {
+    float ratio;
+    int width, height;
+    glfwGetFramebufferSize(window, &width, &height);
+    ratio = width / (float) height;
+
+    glViewport(0, 0, width, height);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(-ratio*100.f, ratio*100.f, -1.f*100.f, 1.f*100.f, 1.f*100.f, -1.f*100.f);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    //glRotatef((float) glfwGetTime() * 50.f, 0.f, 0.f, 1.f);
+    glBegin(GL_TRIANGLES);
+	glColor3f(1.0f,1.0f,1.0f);
+	for (unsigned int i = 0; i < indexs.size() / 3; ++i) {
+
+		unsigned int i0 = indexs[i * 3 + 0];
+		unsigned int i1 = indexs[i * 3 + 1];
+		unsigned int i2 = indexs[i * 3 + 2];
+		//std::cout << i0 << " " << i1 << " " << i2 << std::endl;
+		//std::cout << points.size() << std::endl;
+		//std::cout << points[i0 * 3 + 0] << " " << points[i0 * 3 + 1] << " " << points[i0 * 3 + 2] << std::endl;
+		glVertex3f(points[i0 * 3 + 0], points[i0 * 3 + 1], points[i0 * 3 + 2]);
+		glVertex3f(points[i1 * 3 + 0], points[i1 * 3 + 1], points[i1 * 3 + 2]);
+		glVertex3f(points[i2 * 3 + 0], points[i2 * 3 + 1], points[i2 * 3 + 2]);
 	}
-
-	glfwWindowHint(GLFW_SAMPLES, 4);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-	// Open a window 
-	window = glfwCreateWindow(1024, 768, "Model Loading", NULL, NULL);
-	if (window == NULL) {
-		fprintf(stderr, "Failed to open GLFW window.\n");
-		getchar();
-		glfwTerminate();
-		return -1;
-	}
-	glfwMakeContextCurrent(window);
-
-	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-	{
-		std::cout << "Failed to initialize GLAD" << std::endl;
-		return -1;
-	}
-
-
-	// Ensure we can capture the escape key being pressed below
-	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
-	// Hide the mouse and enable unlimited mouvement
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-	// Set the mouse at the center of the screen
-	glfwPollEvents();
-	glfwSetCursorPos(window, 1024 / 2, 768 / 2);
-
-	// blue background
-	glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
-
-	// Enable depth test
-	glEnable(GL_DEPTH_TEST);
-	// Accept fragment if it closer to the camera than the former one
-	glDepthFunc(GL_LESS);
-
-	// Cull triangles which normal is not towards the camera
-	glEnable(GL_CULL_FACE);
-
-	GLuint VertexArrayID;
-	glGenVertexArrays(1, &VertexArrayID);
-	glBindVertexArray(VertexArrayID);
-
-	// Create and compile our GLSL program from the shaders
-	GLuint programID = LoadShaders("vertex.vertexshader", "fragment.fragmentshader");
-
-	// Get a handle for our "MVP" uniform
-	GLuint MatrixID = glGetUniformLocation(programID, "MVP");
-	GLuint ViewMatrixID = glGetUniformLocation(programID, "V");
-	GLuint ModelMatrixID = glGetUniformLocation(programID, "M");
-
-	// Read .obj file
-	// return the 
-	// vector of vertics 
-	// vector of triangle faces 
-
-	//std::vector<glm::vec3> vertices;
-	std::vector<double> vertices;
-	std::vector<unsigned int> triangles;
-
-	bool res = loadOBJ("bunny.obj", vertices, triangles);
-
-	// Load it into a VBO
-	
-	GLuint vertexbuffer;
-	glGenBuffers(1, &vertexbuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-	//glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), &vertices[0], GL_STATIC_DRAW);
-
-	glBufferData(GL_ARRAY_BUFFER, vertices.size(), &vertices[0], GL_STATIC_DRAW);
-
-	glUseProgram(programID);
-	GLuint LightID = glGetUniformLocation(programID, "LightPosition_worldspace");
-
-	do {
-
-		// Clear the screen
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		// Use our shader
-		glUseProgram(programID);
-
-		// camera program from internet ======================================
-		// Compute the MVP matrix from keyboard and mouse input
-		computeMatricesFromInputs();
-		glm::mat4 ProjectionMatrix = getProjectionMatrix();
-		glm::mat4 ViewMatrix = getViewMatrix();
-		glm::mat4 ModelMatrix = glm::mat4(1.0);
-		glm::mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
-
-		// Send our transformation to the currently bound shader, 
-		// in the "MVP" uniform
-		glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
-		glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &ModelMatrix[0][0]);
-		glUniformMatrix4fv(ViewMatrixID, 1, GL_FALSE, &ViewMatrix[0][0]);
-
-
-		glm::vec3 lightPos = glm::vec3(14, 20, 54);
-		glUniform3f(LightID, lightPos.x, lightPos.y, lightPos.z);
-		// camera program  ======================================
-
-
-
-		//vertices attribute buffer 
-		glEnableVertexAttribArray(0);
-		glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-		glVertexAttribPointer(0,3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-		// Draw triangle
-		glDrawArrays(GL_TRIANGLES, 0, vertices.size());
-
-		glDisableVertexAttribArray(0);
-		glDisableVertexAttribArray(1);
-
-		// Swap buffers
-		glfwSwapBuffers(window);
-		glfwPollEvents();
-
-	} 
-	// Check if the ESC key was pressed or the window was closed
-	while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS &&
-		glfwWindowShouldClose(window) == 0);
-
-	// Cleanup VBO and shader
-	glDeleteBuffers(1, &vertexbuffer);
-	glDeleteProgram(programID);
-	glDeleteVertexArrays(1, &VertexArrayID);
-
-	// Close OpenGL window and terminate GLFW
-	glfwTerminate();
-
-	return 0;
+		glEnd();
+    glfwSwapBuffers(window);
+    glfwPollEvents();
+  }
+  glfwDestroyWindow(window);
+  glfwTerminate();
+  exit(EXIT_SUCCESS);
 }
