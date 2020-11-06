@@ -103,7 +103,7 @@ int main(void)
 
   glfwMakeContextCurrent(window);
   glfwSetKeyCallback(window, key_callback);
-
+  int iframe = 0;
   while (!glfwWindowShouldClose(window))
   {
     float ratio;
