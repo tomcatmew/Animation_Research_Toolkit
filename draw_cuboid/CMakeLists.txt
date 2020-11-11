@@ -18,9 +18,6 @@ ENDIF()
 
 project(draw_cuboid)
 
-configure_file(ColorFragmentShader.fragmentshader ColorFragmentShader.fragmentshader COPYONLY)
-configure_file(TransformVertexShader.vertexshader TransformVertexShader.vertexshader COPYONLY)
-
 # glfw
 IF(MSVC)
   set(GLFW_LIBRARY    ../glfw/src/Release/glfw3.lib)
@@ -30,36 +27,17 @@ ENDIF()
 get_filename_component(GLFW_LIBRARY ${GLFW_LIBRARY} ABSOLUTE)
 get_filename_component(GLFW_INCLUDE_DIR ../glfw/include ABSOLUTE)
 
-#loader
-set(LOADER_INCLUDE_DIR load_shader)
-get_filename_component(LOADER_INCLUDE_DIR ${LOADER_INCLUDE_DIR} ABSOLUTE)
-
-#glm
-set(GLM_INCLUDE_DIR "../glm")
-get_filename_component(GLM_INCLUDE_DIR ${GLM_INCLUDE_DIR} ABSOLUTE)
-
-#glad
-set(GLAD_INCLUDE_DIR "../glad3/include")
-get_filename_component(GLAD_INCLUDE_DIR ${GLAD_INCLUDE_DIR} ABSOLUTE)
-
 # opengl
 find_package(OpenGL REQUIRED)
-message(STATUS "Found GLFW3 in ${GLFW3_INCLUDE_DIR}")
+
 ######################################################
 
 include_directories(
   ${OPENGL_INCLUDE_DIR}
   ${GLFW_INCLUDE_DIR}
-  ${LOADER_INCLUDE_DIR}
-  ${GLAD_INCLUDE_DIR}
-  ${GLM_INCLUDE_DIR}
 )
 
 add_executable(${PROJECT_NAME}
-  ../glad3/include/glad/glad.h 
-  ../glad3/src/glad.c
-  load_shader/shader.cpp
-  load_shader/shader.hpp
   main.cpp
 )
 
