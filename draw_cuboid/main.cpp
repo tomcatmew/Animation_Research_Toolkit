@@ -48,7 +48,7 @@ void geneCUBE(std::vector<double>& out_vertices, std::vector<unsigned int>& out_
 	{
 		out_triangles.push_back(i);
 	}
-	std::cout << out_triangles.size() << std::endl;
+
 }
 
 bool loadOBJ(
@@ -116,6 +116,18 @@ bool loadOBJ(
 	return true;
 }
 
+std::vector<double> matrix_mutiple(std::vector<std::vector<double>> affine_m, std::vector<double> coord) {
+	std::vector<double> result;
+	for (int i = 0; i < affine_m.size(); i += 1) {
+		double tempt_sum = 0;
+		for (int j = 0; j < affine_m[0].size(); j += 1) {
+			tempt_sum = tempt_sum + coord[j] * affine_m[i][j];
+		}
+		result.push_back(tempt_sum);
+	}
+	return result;
+}
+
 static void error_callback(int error, const char* description)
 {
   fputs(description, stderr);
@@ -127,14 +139,17 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
     glfwSetWindowShouldClose(window, GL_TRUE);
 }
 
-
 int main(void)
 {
+	std::cout << "what? " << std::endl;
 	std::vector<double> points;
 	std::vector<unsigned int> indexs;
 	//loadOBJ("bunny.obj", points, indexs);
 	geneCUBE(points, indexs);
-
+	for (int i = 0; i < points.size(); i += 1) {
+		std::cout << points[i] << " ";
+	}
+	std::cout << std::endl;
   GLFWwindow* window;
   glfwSetErrorCallback(error_callback);
   if (!glfwInit())
@@ -149,31 +164,102 @@ int main(void)
   glfwMakeContextCurrent(window);
   glfwSetKeyCallback(window, key_callback);
   int iframe = 0;
+  int rotate_degree = -1;
+
+  glEnable(GL_DEPTH_TEST);
+  // Accept fragment if it closer to the camera than the former one
+  glDepthFunc(GL_LESS);
+
+  double scale_ratio = 5.f;
   while (!glfwWindowShouldClose(window))
   {
+
+	  // get current degree
+	  if (rotate_degree < 359)
+	  {
+		  rotate_degree += 1;
+	  }
+	  else {
+		  rotate_degree = 0;
+	  }
+
+	  // set up affine matrix and calculate new coordinate 
+
+	  //affine matrix Y rotation
+	  std::vector<std::vector<double>> affineY;
+	  std::vector<double> row1y = { cos(rotate_degree * 3.14159 / 180),0,sin(rotate_degree * 3.14159 / 180),0 };
+	  std::vector<double> row2y = { 0, 1, 0,0 };
+	  std::vector<double> row3y = { -sin(rotate_degree * 3.14159 / 180), 0,cos(rotate_degree * 3.14159 / 180), 0 };
+	  std::vector<double> row4y = { 0, 0, 0, 1 };
+	  affineY.push_back(row1y);
+	  affineY.push_back(row2y);
+	  affineY.push_back(row3y);
+	  affineY.push_back(row4y);
+
+	  //affine matrix X rotation
+	  std::vector<std::vector<double>> affineX;
+	  std::vector<double> row1x = { 1,0,0,0 };
+	  std::vector<double> row2x = { 0, cos(rotate_degree * 3.14159 / 180),-sin(rotate_degree * 3.14159 / 180), 0 };
+	  std::vector<double> row3x = { 0, sin(rotate_degree * 3.14159 / 180), cos(rotate_degree * 3.14159 / 180), 0 };
+	  std::vector<double> row4x = { 0, 0, 0, 1 };
+	  affineX.push_back(row1x);
+	  affineX.push_back(row2x);
+	  affineX.push_back(row3x);
+	  affineX.push_back(row4x);
+
+	  //store the vertices list of rotated vertices
+	  std::vector<double> transformed_points;
+
+	  for (int i = 0; i < points.size() / 3; i += 1) {
+		  std::vector<double> tempt_coord;
+		  std::vector<double> new_coordY;
+		  std::vector<double> new_coordX;
+
+		  tempt_coord.push_back(points[i * 3 + 0]);
+		  tempt_coord.push_back(points[i * 3 + 1]);
+		  tempt_coord.push_back(points[i * 3 + 2]);
+		  tempt_coord.push_back(0.f);
+
+		  //first calculating the new coordinate from Y rotation
+		  new_coordY = matrix_mutiple(affineY,tempt_coord);
+		  //then calculating the new coordinate from X rotation
+		  new_coordX = matrix_mutiple(affineX, new_coordY);
+		  //std::cout << new_coord.size() << std::endl;
+
+		  //put the rotated coordinate into the vertex list
+		  for (int j = 0; j < new_coordX.size() - 1 ; j += 1) {
+			  transformed_points.push_back(new_coordX[j]);
+		  }
+	  }
+	  // end calculation of affine matrix 
+
+
     float ratio;
     int width, height;
     glfwGetFramebufferSize(window, &width, &height);
     ratio = width / (float) height;
 
     glViewport(0, 0, width, height);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(-ratio*5.f, ratio * 5.f, -1.f * 5.f, 1.f * 5.f, 1.f * 5.f, -1.f * 5.f);
+    glOrtho(-ratio* scale_ratio, ratio * scale_ratio, -1.f * scale_ratio, 1.f * scale_ratio, 1.f * scale_ratio, -1.f * scale_ratio);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     //glRotatef((float) glfwGetTime() * 50.f, 0.f, 0.f, 1.f);
     glBegin(GL_TRIANGLES);
-	glColor3f(1.0f,1.0f,1.0f);
+
 	for (unsigned int i = 0; i < indexs.size() / 3; ++i) {
 
 		unsigned int i0 = indexs[i * 3 + 0];
 		unsigned int i1 = indexs[i * 3 + 1];
 		unsigned int i2 = indexs[i * 3 + 2];
-		glVertex3f(points[i0 * 3 + 0], points[i0 * 3 + 1], points[i0 * 3 + 2]);
-		glVertex3f(points[i1 * 3 + 0], points[i1 * 3 + 1], points[i1 * 3 + 2]);
-		glVertex3f(points[i2 * 3 + 0], points[i2 * 3 + 1], points[i2 * 3 + 2]);
+		glColor3f(1.0f, 1.0f, 1.0f);
+		glVertex3f(transformed_points[i0 * 3 + 0], transformed_points[i0 * 3 + 1], transformed_points[i0 * 3 + 2]);
+		glColor3f(0.7f, 1.f, 0.f);
+		glVertex3f(transformed_points[i1 * 3 + 0], transformed_points[i1 * 3 + 1], transformed_points[i1 * 3 + 2]);
+		glColor3f(0.1f, 0.5f, 1.f);
+		glVertex3f(transformed_points[i2 * 3 + 0], transformed_points[i2 * 3 + 1], transformed_points[i2 * 3 + 2]);
 	}
 		glEnd();
     glfwSwapBuffers(window);
