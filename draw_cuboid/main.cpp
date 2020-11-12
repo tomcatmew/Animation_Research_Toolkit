@@ -141,15 +141,11 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 
 int main(void)
 {
-	std::cout << "what? " << std::endl;
 	std::vector<double> points;
 	std::vector<unsigned int> indexs;
 	//loadOBJ("bunny.obj", points, indexs);
 	geneCUBE(points, indexs);
-	for (int i = 0; i < points.size(); i += 1) {
-		std::cout << points[i] << " ";
-	}
-	std::cout << std::endl;
+
   GLFWwindow* window;
   glfwSetErrorCallback(error_callback);
   if (!glfwInit())
@@ -165,6 +161,8 @@ int main(void)
   glfwSetKeyCallback(window, key_callback);
   int iframe = 0;
   int rotate_degree = -1;
+  double move_step = 0.1f;
+  bool reach_end = false;
 
   glEnable(GL_DEPTH_TEST);
   // Accept fragment if it closer to the camera than the former one
@@ -174,7 +172,7 @@ int main(void)
   while (!glfwWindowShouldClose(window))
   {
 
-	  // get current degree
+	  //get current rotation degree
 	  if (rotate_degree < 359)
 	  {
 		  rotate_degree += 1;
@@ -183,12 +181,27 @@ int main(void)
 		  rotate_degree = 0;
 	  }
 
+	  //get current moving position 
+	  if ((move_step < 4.f) & (reach_end == false)){
+		  move_step += 0.05f;
+	  }
+	  else {
+		  reach_end = true;
+	  }
+
+	  if ((move_step > -5.f) & (reach_end == true)) {
+		  move_step -= 0.05f;
+	  }
+	  else {
+		  reach_end = false;
+	  }
+
 	  // set up affine matrix and calculate new coordinate 
 
 	  //affine matrix Y rotation
 	  std::vector<std::vector<double>> affineY;
 	  std::vector<double> row1y = { cos(rotate_degree * 3.14159 / 180),0,sin(rotate_degree * 3.14159 / 180),0 };
-	  std::vector<double> row2y = { 0, 1, 0,0 };
+	  std::vector<double> row2y = { 0, 1, 0, 0 };
 	  std::vector<double> row3y = { -sin(rotate_degree * 3.14159 / 180), 0,cos(rotate_degree * 3.14159 / 180), 0 };
 	  std::vector<double> row4y = { 0, 0, 0, 1 };
 	  affineY.push_back(row1y);
@@ -196,9 +209,9 @@ int main(void)
 	  affineY.push_back(row3y);
 	  affineY.push_back(row4y);
 
-	  //affine matrix X rotation
+	  //affine matrix X rotation and let cuboid moves on X axis
 	  std::vector<std::vector<double>> affineX;
-	  std::vector<double> row1x = { 1,0,0,0 };
+	  std::vector<double> row1x = { 1,0,0,move_step };
 	  std::vector<double> row2x = { 0, cos(rotate_degree * 3.14159 / 180),-sin(rotate_degree * 3.14159 / 180), 0 };
 	  std::vector<double> row3x = { 0, sin(rotate_degree * 3.14159 / 180), cos(rotate_degree * 3.14159 / 180), 0 };
 	  std::vector<double> row4x = { 0, 0, 0, 1 };
@@ -207,7 +220,7 @@ int main(void)
 	  affineX.push_back(row3x);
 	  affineX.push_back(row4x);
 
-	  //store the vertices list of rotated vertices
+	  //store the vertices list of rotated and transformed vertices
 	  std::vector<double> transformed_points;
 
 	  for (int i = 0; i < points.size() / 3; i += 1) {
@@ -218,7 +231,7 @@ int main(void)
 		  tempt_coord.push_back(points[i * 3 + 0]);
 		  tempt_coord.push_back(points[i * 3 + 1]);
 		  tempt_coord.push_back(points[i * 3 + 2]);
-		  tempt_coord.push_back(0.f);
+		  tempt_coord.push_back(1.f);
 
 		  //first calculating the new coordinate from Y rotation
 		  new_coordY = matrix_mutiple(affineY,tempt_coord);
