@@ -165,8 +165,21 @@ std::vector<double> a_rotate_degree(const std::vector<double>& coordinate, int d
 							  0, 0, 0, 0 ,
 							   0, 0, 0, 1 };
 
+	std::vector<double> affineX = { 1,0,0,0,
+						   0, cos(20 * 3.14159 / 180),-sin(20 * 3.14159 / 180), 0 ,
+						  0, sin(20 * 3.14159 / 180), cos(20 * 3.14159 / 180), 0 ,
+						   0, 0, 0, 1 };
+
+	std::vector<double> affineY = { cos(45 * 3.14159 / 180),0,sin(45 * 3.14159 / 180),0,
+								 0, 1, 0, 0 ,
+								 -sin(45 * 3.14159 / 180), 0,cos(45 * 3.14159 / 180), 0 ,
+								 0, 0, 0, 1 };
+
 	std::vector<double> tempt_affine;
+	std::vector<double> tempt_affine2;
+
 	tempt_affine = matrix_m_matrix(affineZ_a, affine_tran_a);
+	//tempt_affine2 = matrix_m_matrix(tempt_affine, affineY);
 
 	transformed_coordinate = matrix_mutiple(tempt_affine, coordinate);
 	return transformed_coordinate;
@@ -185,6 +198,16 @@ std::vector<double> b_rotate_degree(const std::vector<double>& coordinate, int d
 						   0,0,1,0,
 						   0,0,0,1 };
 
+	std::vector<double> affineX = { 1,0,0,0,
+							   0, cos(20 * 3.14159 / 180),-sin(20 * 3.14159 / 180), 0 ,
+							  0, sin(20 * 3.14159 / 180), cos(20 * 3.14159 / 180), 0 ,
+							   0, 0, 0, 1 };
+
+	std::vector<double> affineY = { cos(45 * 3.14159 / 180),0,sin(45 * 3.14159 / 180),0,
+							 0, 1, 0, 0 ,
+							 -sin(45 * 3.14159 / 180), 0,cos(45 * 3.14159 / 180), 0 ,
+							 0, 0, 0, 1 };
+
 	std::vector<double> affineZ_a = { cos(degree_a * 3.14159 / 180),-sin(degree_a * 3.14159 / 180),0,0,
 							   sin(degree_a * 3.14159 / 180), cos(degree_a * 3.14159 / 180),0, 0 ,
 							  0, 0, 0, 0 ,
@@ -199,9 +222,13 @@ std::vector<double> b_rotate_degree(const std::vector<double>& coordinate, int d
 	std::vector<double> tempt_affine2;
 	std::vector<double> tempt_affine3;
 
+	//std::vector<double> tempt_affine4;
+
 	tempt_affine = matrix_m_matrix(affineZ_a, affine_tran_a);  // R2(theta1) * T (l1x)
 	tempt_affine2 = matrix_m_matrix(tempt_affine, affineZ_b); // R2(theta1) * T (l1x) * R(theta2)
 	tempt_affine3 = matrix_m_matrix(tempt_affine2, affine_tran_b);  // R2(theta1) * T (l1x) * R(theta2) * T(l2x/2)
+
+	//tempt_affine4 = matrix_m_matrix(tempt_affine3, affineY);
 
 	transformed_coordinate = matrix_mutiple(tempt_affine3, coordinate);
 	return transformed_coordinate;
@@ -231,7 +258,7 @@ int main(void)
 	double cube_y = 2.0f;
 	double cube_z = 2.0f;
 
-	double cube_b_x = 4.0f;
+	double cube_b_x = 3.0f;
 	double cube_b_y = 2.0f;
 	double cube_b_z = 2.0f;
 	geneCUBE_length(cube_x, cube_y, cube_z,points, indexs);
@@ -342,8 +369,9 @@ int main(void)
     glViewport(0, 0, width, height);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
+    glLoadIdentity(); 
     glOrtho(-ratio* scale_ratio, ratio * scale_ratio, -1.f * scale_ratio, 1.f * scale_ratio, 1.f * scale_ratio, -1.f * scale_ratio);
+	//gluPerspective(120,ratio,0.001f,1.0f);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     //glRotatef((float) glfwGetTime() * 50.f, 0.f, 0.f, 1.f);

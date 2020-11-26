@@ -214,26 +214,30 @@ int main(void)
 								         0,0,1,0,
 								         0,0,0,1};
 
-
+	  //matrix calculation 4x4 
+	  std::vector<double> new_affinea;
+	  std::vector<double> new_affineb;
+	  new_affinea = matrix_m_matrix(affineY, affineX);
+	  new_affineb = matrix_m_matrix(affineY_tr, new_affinea);// affine Y_tr * (affine Y * affine X)
+	  //affine Y_tr * C
+	  //affine Y * affine X
 	  //store the vertices list of rotated and transformed vertices
 	  std::vector<double> transformed_points;
 
 	  for (int i = 0; i < points.size() / 3; i += 1) {
 		  std::vector<double> tempt_coord;
-		  std::vector<double> new_affinea;
-		  std::vector<double> new_affineb;
 		  std::vector<double> new_coord_final;
+
 
 		  tempt_coord.push_back(points[i * 3 + 0]);
 		  tempt_coord.push_back(points[i * 3 + 1]);
 		  tempt_coord.push_back(points[i * 3 + 2]);
 		  tempt_coord.push_back(1.f);
 
-		  //matrix calculation 4x4 
-		  new_affinea = matrix_m_matrix(affineY, affineX);
-		  new_affineb = matrix_m_matrix(new_affinea, affineY_tr);
+
+
 		  //final coordinate calculation 4x1
-		  new_coord_final = matrix_mutiple(new_affineb, tempt_coord);
+		  new_coord_final = matrix_mutiple(new_affineb, tempt_coord);  //(affine Y_tr * affine Y * affine X ) * C = affine Y_tr * ( affine Y * (affine X * C )) 
 
 
 		  //std::cout << new_coord.size() << std::endl;
