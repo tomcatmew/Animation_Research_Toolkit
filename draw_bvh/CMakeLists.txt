@@ -18,7 +18,7 @@ ENDIF()
 
 project(draw_bvh)
 
-# glfw
+#glfw
 IF(MSVC)
   set(GLFW_LIBRARY    ../glfw/src/Release/glfw3.lib)
 ELSE()
@@ -27,8 +27,11 @@ ENDIF()
 get_filename_component(GLFW_LIBRARY ${GLFW_LIBRARY} ABSOLUTE)
 get_filename_component(GLFW_INCLUDE_DIR ../glfw/include ABSOLUTE)
 
-# opengl
+#opengl
 find_package(OpenGL REQUIRED)
+
+#myutility 
+set(UTI_INCLUDE_DIR "../utility")
 
 ######################################################
 

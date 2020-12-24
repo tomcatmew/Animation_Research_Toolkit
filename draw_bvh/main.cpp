@@ -8,6 +8,8 @@
 #include <fstream>
 #include <cassert>
 #include <stdlib.h>
+//#include "ycmatrix.h"
+
 
 class RIGbone
 {
@@ -122,7 +124,19 @@ void CalcInvMat(double* a, const int n, int& info)
 	}
 }
 
-
+std::vector<double> matrix_m_matrix(const std::vector<double>& matrix_a, const std::vector<double>& matrix_b) {
+	std::vector<double> result;
+	for (int i = 0; i < 4; i += 1) {
+		for (int j = 0; j < 4; j += 1) {
+			double tempt = 0.f;
+			for (int k = 0; k < 4; k += 1) {
+				tempt = tempt + matrix_a[i * 4 + k] * matrix_b[k * 4 + j];
+			}
+			result.push_back(tempt);
+		}
+	}
+	return result;
+}
 //[1]Utilities functions including copy matrix, copy matrix x matrix to a 4x4 matrix and 4x4 matrix return a 4x4 matrix---------------
 
 void Copy_Mat4(double m1[16], const std::vector<double> m0)
@@ -143,18 +157,47 @@ void MatMat4(
 }
 
 
-std::vector<double> matrix_m_matrix(const std::vector<double>& matrix_a, const std::vector<double>& matrix_b) {
-	std::vector<double> result;
-	for (int i = 0; i < 4; i += 1) {
-		for (int j = 0; j < 4; j += 1) {
-			double tempt = 0.f;
-			for (int k = 0; k < 4; k += 1) {
-				tempt = tempt + matrix_a[i * 4 + k] * matrix_b[k * 4 + j];
-			}
-			result.push_back(tempt);
-		}
-	}
-	return result;
+template <typename REAL>
+std::vector<double> Quat(const REAL* q)
+{
+	std::vector<double> output;
+	REAL x2 = q[1] * q[1] * 2.0;
+	REAL y2 = q[2] * q[2] * 2.0;
+	REAL z2 = q[3] * q[3] * 2.0;
+	REAL xy = q[1] * q[2] * 2.0;
+	REAL yz = q[2] * q[3] * 2.0;
+	REAL zx = q[3] * q[1] * 2.0;
+	REAL xw = q[1] * q[0] * 2.0;
+	REAL yw = q[2] * q[0] * 2.0;
+	REAL zw = q[3] * q[0] * 2.0;
+
+	output.push_back(1.0 - y2 - z2);
+	output.push_back(xy - zw);
+	output.push_back(zx + yw);
+	output.push_back(.0);
+
+	output.push_back(xy + zw);
+	output.push_back(1.0 - z2 - x2);
+	output.push_back(yz - xw);
+	output.push_back(.0);
+
+	output.push_back(zx - yw);
+	output.push_back(yz + xw);
+	output.push_back(1.0 - x2 - y2);
+	output.push_back(.0);
+
+	output.push_back(.0);
+	output.push_back(.0);
+	output.push_back(.0);
+	output.push_back(1.0);
+
+
+	//m.SetZero();
+	//m.mat[0 * 4 + 0] = 1.0 - y2 - z2; m.mat[0 * 4 + 1] = xy - zw;         m.mat[0 * 4 + 2] = zx + yw;
+	//m.mat[1 * 4 + 0] = xy + zw;       m.mat[1 * 4 + 1] = 1.0 - z2 - x2;   m.mat[1 * 4 + 2] = yz - xw;
+	//m.mat[2 * 4 + 0] = zx - yw;       m.mat[2 * 4 + 1] = yz + xw;         m.mat[2 * 4 + 2] = 1.0 - x2 - y2;
+	//m.mat[3 * 4 + 3] = 1.0;
+	return output;
 }
 
 void UpdateBoneRotTrans
@@ -202,9 +245,15 @@ void UpdateBoneRotTrans
 		std::vector<double> temp_result;
 		std::vector<double> temp_result2;
 		std::vector<double> temp_result3;
+
+
+
+		std::vector<double> quat_matrix = Quat(aBone[ibone].quatRelativeRot);
+
 		temp_result = matrix_m_matrix(tempt_tranform4d, tempt_Xrotate_4d);
-		temp_result2 = matrix_m_matrix(temp_result, tempt_Yrotate_4d);
-		temp_result3 = matrix_m_matrix(temp_result2, tempt_Zrotate_4d);
+		//temp_result2 = matrix_m_matrix(temp_result, tempt_Yrotate_4d);
+		//temp_result3 = matrix_m_matrix(temp_result2, tempt_Zrotate_4d);
+		temp_result3 = matrix_m_matrix(temp_result, quat_matrix);
 
 		// quertion way, and use GLM matrix 4D
 		//CMat4d m01 = CMat4d::Translate(aBone[ibone].transRelative);
@@ -222,6 +271,28 @@ void UpdateBoneRotTrans
 	}
 }
 
+template <typename REAL>
+void QuatQuat(
+	REAL r[],
+	const REAL p[],
+	const REAL q[])
+{
+	r[0] = p[0] * q[0] - p[1] * q[1] - p[2] * q[2] - p[3] * q[3];
+	r[1] = p[0] * q[1] + p[1] * q[0] + p[2] * q[3] - p[3] * q[2];
+	r[2] = p[0] * q[2] - p[1] * q[3] + p[2] * q[0] + p[3] * q[1];
+	r[3] = p[0] * q[3] + p[1] * q[2] - p[2] * q[1] + p[3] * q[0];
+}
+
+template <typename REAL>
+void Copy_Quat(
+	REAL r[],
+	const REAL p[])
+{
+	r[0] = p[0];
+	r[1] = p[1];
+	r[2] = p[2];
+	r[3] = p[3];
+}
 
 void SetPose_BioVisionHierarchy
 (std::vector<RIGbone>& aBone,
@@ -243,31 +314,37 @@ void SetPose_BioVisionHierarchy
 		assert(ibone < (int)aBone.size());
 		assert(iaxis >= 0 && iaxis < 3);
 		if (!isrot) {
+			aBone[ibone].transRelative[iaxis] = val;
+
+
+			//old method, degree transformation ==========
 			//this is for transformation 
-			if((iaxis == 0) || (iaxis == 1))
+			//if((iaxis == 0) || (iaxis == 1))
 				// move the character to the center a little bit 
-				aBone[ibone].transRelative[iaxis] = val - 10;
-			else
-				aBone[ibone].transRelative[iaxis] = val;
+			//	aBone[ibone].transRelative[iaxis] = val;
+			//else
+			//	aBone[ibone].transRelative[iaxis] = val;
 		}
 		else {
-			// this is for rotation
+			// this is for rotation  ==========
 			//my way store degree in quatRelativeRot instead of quenteron 
-			aBone[ibone].quatRelativeRot[1 + iaxis] = val;
+			//aBone[ibone].quatRelativeRot[1 + iaxis] = val;
 
 			// the way of quertino method 
-			//const double ar = val * 3.14 / 180.0;
-			//double v0[3] = { 0,0,0 };
-			//v0[iaxis] = 1.0;
-			//double dq[4] = { cos(ar * 0.5), v0[0] * sin(ar * 0.5), v0[1] * sin(ar * 0.5), v0[2] * sin(ar * 0.5) };
-			//double qtmp[4]; 
-			//QuatQuat(qtmp,aBone[ibone].quatRelativeRot, dq);
-			//Copy_Quat(aBone[ibone].quatRelativeRot, qtmp);
+			const double ar = val * 3.1415926 / 180.0;
+			double v0[3] = { 0,0,0 };
+			v0[iaxis] = 1.0;
+			double dq[4] = { cos(ar * 0.5), v0[0] * sin(ar * 0.5), v0[1] * sin(ar * 0.5), v0[2] * sin(ar * 0.5) };
+			double qtmp[4]; QuatQuat(qtmp,
+				aBone[ibone].quatRelativeRot, dq);
+			Copy_Quat(aBone[ibone].quatRelativeRot, qtmp);
 
 		}
 	}
 	UpdateBoneRotTrans(aBone);
 }
+
+
 
 //[1]ABOVE ARE UTILITY FUNCTIONS -------------------------
 
@@ -813,7 +890,7 @@ int main(void)
   int nframe = 0;
   std::vector<double> aValRotTransBone;
 
-  std::string path_bvh = "10_01.bvh";
+  std::string path_bvh = "jump.bvh";
 
   loadBVH(aBone, aChannelRotTransBone, nframe, aValRotTransBone,path_bvh);
 
@@ -823,7 +900,7 @@ int main(void)
   }
 
 
-  double scale_ratio = 20.f;
+  double scale_ratio = 390.f;
   while (!glfwWindowShouldClose(window))
   {
 	  {
@@ -842,11 +919,13 @@ int main(void)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity(); 
-    glOrtho(-ratio* scale_ratio, ratio * scale_ratio, -1.f * scale_ratio, 1.f * scale_ratio, 1.f * scale_ratio, -1.f * scale_ratio);
+	// last two parameters change the clipping planes 
+    glOrtho(-ratio* scale_ratio, ratio * scale_ratio, -1.f * scale_ratio, 1.f * scale_ratio, 10.f * scale_ratio, -10.f * scale_ratio);
 	//gluPerspective(120,ratio,0.001f,1.0f);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    //glRotatef((float) glfwGetTime() * 50.f, 0.f, 0.f, 1.f);
+
+    //glRotatef((float) glfwGetTime() * 50.f, 0.f, 1.f, 0.f);
 
 	DrawBone(aBone,-1, -1,0.1, 1.0);
 
