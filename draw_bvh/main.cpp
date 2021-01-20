@@ -495,7 +495,13 @@ bool loadBVH(std::vector<RIGbone>& aBone,
 		assert(aToken.size() == aChannelRotTransBone.size());
 		for (int ich = 0; ich < nchannel; ++ich) {
 			//aValueRotTransBone[iframe * nchannel + ich] = rig_v3q::myStod(aToken[ich]);
-			aValueRotTransBone[iframe * nchannel + ich] = atof(aToken[ich].c_str());
+			if (ich == 1)
+			{
+				aValueRotTransBone[iframe * nchannel + ich] = atof(aToken[ich].c_str()) - 180;
+			}
+			else {
+				aValueRotTransBone[iframe * nchannel + ich] = atof(aToken[ich].c_str());
+			}
 		}
 	}
 	// --------------- bones initilization ?
@@ -512,8 +518,8 @@ bool loadBVH(std::vector<RIGbone>& aBone,
 		// WHY ? why transrelative takes the minus substraction 
 		if (bone.ibone_parent != -1) {
 			const RIGbone& bone_p = aBone[bone.ibone_parent];
-			bone.transRelative[0] = (-bone.invBindMat[3]) - (-bone_p.invBindMat[3]);
-			bone.transRelative[1] = (-bone.invBindMat[7]) - (-bone_p.invBindMat[7]);
+			bone.transRelative[0] = (-bone.invBindMat[3]) - (-bone_p.invBindMat[3]) ;
+			bone.transRelative[1] = (-bone.invBindMat[7]) - (-bone_p.invBindMat[7]) ;
 			bone.transRelative[2] = (-bone.invBindMat[11]) - (-bone_p.invBindMat[11]);
 		}
 	}
@@ -619,6 +625,7 @@ void DrawBone(
 		bool is_selected_p = (ibone_p == ibone_selected);
 		if (is_selected_p) { glColor3d(1.0, 1.0, 1.0); }
 		else { glColor3d(1.0, 0.0, 0.0); }
+		glLineWidth(4);
 		glBegin(GL_LINES);
 		// understand what is GLVertex
 		std::vector<double> tempt_cur = bone.Pos();
@@ -870,7 +877,7 @@ int main(void)
   glfwSetErrorCallback(error_callback);
   if (!glfwInit())
     exit(EXIT_FAILURE);
-  window = glfwCreateWindow(1080, 880, "Assignment_5_read_BVH", NULL, NULL);
+  window = glfwCreateWindow(1080, 880, "5_read_BVH", NULL, NULL);
   if (!window)
   {
     glfwTerminate();
@@ -900,7 +907,7 @@ int main(void)
   }
 
 
-  double scale_ratio = 390.f;
+  double scale_ratio = 290.f;
   while (!glfwWindowShouldClose(window))
   {
 	  {
@@ -925,7 +932,7 @@ int main(void)
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    //glRotatef((float) glfwGetTime() * 50.f, 0.f, 1.f, 0.f);
+    glRotatef((float) glfwGetTime() * 50.f, 0.f, 1.f, 0.f);
 
 	DrawBone(aBone,-1, -1,0.1, 1.0);
 
