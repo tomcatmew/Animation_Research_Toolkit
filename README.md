@@ -1,4 +1,7 @@
 # Research_Assignment_1
+This project is based on the assignments given by Prof.Umetatni. 
+
+
 build the GLFW before build the assignment code
 ```
 cmake . -A x64
