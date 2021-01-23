@@ -32,18 +32,20 @@ find_package(OpenGL REQUIRED)
 
 #myutility 
 set(UTI_INCLUDE_DIR "../utility")
+set(SOURCES ${UTI_INCLUDE_DIR}/ycmatrix.cpp ${UTI_INCLUDE_DIR}/ycdraw.cpp ${UTI_INCLUDE_DIR}/ycmatrix.h ${UTI_INCLUDE_DIR}/ycdraw.h)
 
 ######################################################
 
 include_directories(
   ${OPENGL_INCLUDE_DIR}
   ${GLFW_INCLUDE_DIR}
+  ${UTI_INCLUDE_DIR}
 )
 
 add_executable(${PROJECT_NAME}
   main.cpp
 )
-
+add_executable(untilities ${SOURCES})
 #######################################################
 
 IF(APPLE)
