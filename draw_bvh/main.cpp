@@ -134,6 +134,7 @@ void UpdateBoneRotTrans
 	for (std::size_t ibone = 0; ibone < aBone.size(); ++ibone) {
 
 		std::vector<double> tempt_tranform4d;
+
 		for (int i = 0; i < 16; i++) {
 			if ((i == 0) || (i == 5) || (i == 10) || (i == 15)) {
 				tempt_tranform4d.push_back(1.0f);
@@ -151,43 +152,84 @@ void UpdateBoneRotTrans
 				tempt_tranform4d.push_back(0.0f);
 			}
 		}
+
+		std::vector<double> temp_result;
+
+
+		std::vector<double> quat_matrix = Quat(aBone[ibone].quatRelativeRot);
+
+		temp_result = matrix_m_matrix(tempt_tranform4d, quat_matrix);
+
+		// quertion way, and use GLM matrix 4D - Prof.Umetani's way
+		//CMat4d m01 = CMat4d::Translate(aBone[ibone].transRelative);
+		//m01 = m01 * CMat4d::Quat(aBone[ibone].quatRelativeRot);
+		//m01 = m01 * CMat4d::Scale(aBone[ibone].scale);
+
+		const int ibone_p = aBone[ibone].ibone_parent;
+		if (ibone_p < 0 || ibone_p >= (int)aBone.size()) { // root bone
+			Copy_Mat4(aBone[ibone].affmat3Global, temp_result);
+			continue;
+		}
+		MatMat4(aBone[ibone].affmat3Global,
+			aBone[ibone_p].affmat3Global, temp_result);
+	   
+	}
+}
+
+void UpdateBoneRotTrans_XYZ
+(std::vector<RIGbone>& aBone)
+{
+	for (std::size_t ibone = 0; ibone < aBone.size(); ++ibone) {
+
+		std::vector<double> tempt_tranform4d;
+
+		for (int i = 0; i < 16; i++) {
+			if ((i == 0) || (i == 5) || (i == 10) || (i == 15)) {
+				tempt_tranform4d.push_back(1.0f);
+			}
+			else if (i == 3) {
+				tempt_tranform4d.push_back(aBone[ibone].transRelative[0]);
+			}
+			else if (i == 7) {
+				tempt_tranform4d.push_back(aBone[ibone].transRelative[1]);
+			}
+			else if (i == 11) {
+				tempt_tranform4d.push_back(aBone[ibone].transRelative[2]);
+			}
+			else {
+				tempt_tranform4d.push_back(0.0f);
+			}
+		}
+
+
 		double X_degree = aBone[ibone].quatRelativeRot[1];
 		double Y_degree = aBone[ibone].quatRelativeRot[2];
 		double Z_degree = aBone[ibone].quatRelativeRot[3];
 
 		std::vector<double> tempt_Xrotate_4d = { 1,0,0,0,
-					   0, cos(X_degree * 3.14159 / 180),-sin(X_degree * 3.14159 / 180), 0 ,
-					  0, sin(X_degree * 3.14159 / 180), cos(X_degree * 3.14159 / 180), 0 ,
-					   0, 0, 0, 1 };
+												 0, cos(X_degree),-sin(X_degree), 0 ,
+												 0, sin(X_degree), cos(X_degree), 0,
+												 0, 0, 0, 1 };
 
-		std::vector<double> tempt_Yrotate_4d = { cos(Y_degree * 3.14159 / 180),0,sin(Y_degree * 3.14159 / 180),0,
-							 0, 1, 0, 0 ,
-							 -sin(Y_degree * 3.14159 / 180), 0,cos(Y_degree * 3.14159 / 180), 0 ,
-							 0, 0, 0, 1 };
+		std::vector<double> tempt_Yrotate_4d = { cos(Y_degree), 0,sin(Y_degree), 0,
+												 0, 1, 0, 0 ,
+												 -sin(Y_degree), 0,cos(Y_degree), 0,
+												 0, 0, 0, 1 };
 
-		std::vector<double> tempt_Zrotate_4d = { cos(Z_degree * 3.14159 / 180),-sin(Z_degree * 3.14159 / 180),0,0,
-						   sin(Z_degree * 3.14159 / 180), cos(Z_degree * 3.14159 / 180),0, 0 ,
-						  0, 0, 0, 0 ,
-						   0, 0, 0, 1 };
+		std::vector<double> tempt_Zrotate_4d = { cos(Z_degree),-sin(Z_degree),0, 0,
+												 sin(Z_degree), cos(Z_degree),0, 0,
+												 0, 0, 1, 0 ,
+												 0, 0, 0, 1 };
 
 		std::vector<double> temp_result;
 		std::vector<double> temp_result2;
 		std::vector<double> temp_result3;
 
-
-
 		std::vector<double> quat_matrix = Quat(aBone[ibone].quatRelativeRot);
 
 		temp_result = matrix_m_matrix(tempt_tranform4d, tempt_Xrotate_4d);
-		//temp_result2 = matrix_m_matrix(temp_result, tempt_Yrotate_4d);
-		//temp_result3 = matrix_m_matrix(temp_result2, tempt_Zrotate_4d);
-		temp_result3 = matrix_m_matrix(temp_result, quat_matrix);
-
-		// quertion way, and use GLM matrix 4D
-		//CMat4d m01 = CMat4d::Translate(aBone[ibone].transRelative);
-		//m01 = m01 * CMat4d::Quat(aBone[ibone].quatRelativeRot);
-		//m01 = m01 * CMat4d::Scale(aBone[ibone].scale);
-
+		temp_result2 = matrix_m_matrix(temp_result, tempt_Yrotate_4d);
+		temp_result3 = matrix_m_matrix(temp_result2, tempt_Zrotate_4d);
 
 		const int ibone_p = aBone[ibone].ibone_parent;
 		if (ibone_p < 0 || ibone_p >= (int)aBone.size()) { // root bone
@@ -223,7 +265,7 @@ void SetPose_BioVisionHierarchy
 
 
 			//old method, degree transformation ==========
-			//this is for transformation 
+			//this is for re-position the character by directly change the XY coordinate, (don't use it)
 			//if((iaxis == 0) || (iaxis == 1))
 				// move the character to the center a little bit 
 			//	aBone[ibone].transRelative[iaxis] = val;
@@ -231,11 +273,13 @@ void SetPose_BioVisionHierarchy
 			//	aBone[ibone].transRelative[iaxis] = val;
 		}
 		else {
-			// this is for rotation  ==========
-			//my way store degree in quatRelativeRot instead of quenteron 
-			//aBone[ibone].quatRelativeRot[1 + iaxis] = val;
+			// this is for rotation XYZ ========== (my way store degree in quatRelativeRot instead of quenteron )
+			//double ar = val * 3.1415926 / 180.0;
+			//aBone[ibone].quatRelativeRot[1 + iaxis] = ar;
+			// this is for rotation XYZ ==========
 
-			// the way of quertino method 
+			// the way of quaternion method   =======
+			
 			const double ar = val * 3.1415926 / 180.0;
 			double v0[3] = { 0,0,0 };
 			v0[iaxis] = 1.0;
@@ -243,9 +287,11 @@ void SetPose_BioVisionHierarchy
 			double qtmp[4]; QuatQuat(qtmp,
 				aBone[ibone].quatRelativeRot, dq);
 			Copy_Quat(aBone[ibone].quatRelativeRot, qtmp);
-
+			
+			// the way of quaternion method   =======
 		}
 	}
+	//UpdateBoneRotTrans_XYZ(aBone);
 	UpdateBoneRotTrans(aBone);
 }
 //[1]ABOVE ARE UTILITY FUNCTIONS -------------------------------------[1]
@@ -702,12 +748,15 @@ int main(void)
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity(); 
 	// last two parameters change the clipping planes 
+	//mat4x4_perspective(p, 1.57, width / (float)height, 1, 10);
     glOrtho(-ratio* scale_ratio, ratio * scale_ratio, -1.f * scale_ratio, 1.f * scale_ratio, 10.f * scale_ratio, -10.f * scale_ratio);
 	//gluPerspective(120,ratio,0.001f,1.0f);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    glRotatef((float) glfwGetTime() * 50.f, 0.f, 1.f, 0.f);
+    //glRotatef((float) glfwGetTime() * 50.f, 0.f, 1.f, 0.f);
+
+	//glRotatef(0.f, 180.f, 180.f, 0.f);
 
 	DrawBone(aBone,-1, -1,0.1, 1.0);
 
