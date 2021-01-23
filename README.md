@@ -1,5 +1,5 @@
 ### Animation Research Toolkit
-##This project is based on the assignments given by Prof.Umetatni. 
+This project is based on the assignments given by Prof.Umetatni. 
 
 ### Directory 
   * one_triangle - simple C++ project to draw a triangle
