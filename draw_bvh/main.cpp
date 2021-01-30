@@ -262,15 +262,6 @@ void SetPose_BioVisionHierarchy
 		assert(iaxis >= 0 && iaxis < 3);
 		if (!isrot) {
 			aBone[ibone].transRelative[iaxis] = val;
-
-
-			//old method, degree transformation ==========
-			//this is for re-position the character by directly change the XY coordinate, (don't use it)
-			//if((iaxis == 0) || (iaxis == 1))
-				// move the character to the center a little bit 
-			//	aBone[ibone].transRelative[iaxis] = val;
-			//else
-			//	aBone[ibone].transRelative[iaxis] = val;
 		}
 		else {
 			// this is for rotation XYZ ========== (my way store degree in quatRelativeRot instead of quenteron )
@@ -718,7 +709,8 @@ int main(void)
   int nframe = 0;
   std::vector<double> aValRotTransBone;
 
-  std::string path_bvh = "jump.bvh";
+  std::string path_bvh = "LocomotionFlat01_000.bvh";
+  //std::string path_bvh = "jump.bvh";
 
   loadBVH(aBone, aChannelRotTransBone, nframe, aValRotTransBone,path_bvh);
 
@@ -727,8 +719,10 @@ int main(void)
 	  std::cout << ib << " " << aBone[ib].bname << std::endl;
   }
 
+  //uncomment for PFNN data
+  double scale_ratio = 30.f;
 
-  double scale_ratio = 290.f;
+  //double scale_ratio = 250.f;
   while (!glfwWindowShouldClose(window))
   {
 	  {
@@ -749,10 +743,13 @@ int main(void)
     glLoadIdentity(); 
 	// last two parameters change the clipping planes 
 	//mat4x4_perspective(p, 1.57, width / (float)height, 1, 10);
-    glOrtho(-ratio* scale_ratio, ratio * scale_ratio, -1.f * scale_ratio, 1.f * scale_ratio, 10.f * scale_ratio, -10.f * scale_ratio);
+    glOrtho(-ratio* scale_ratio, ratio * scale_ratio, -1.f * scale_ratio, 1.f * scale_ratio, 100.f * scale_ratio, -100.f * scale_ratio);
 	//gluPerspective(120,ratio,0.001f,1.0f);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
+
+	// uncomment for PFNN data
+	glTranslated(0.f, 170.f, 0.f);
 
     //glRotatef((float) glfwGetTime() * 50.f, 0.f, 1.f, 0.f);
 
