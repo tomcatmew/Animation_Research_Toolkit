@@ -660,8 +660,8 @@ bool loadOBJ(
 
 	}
 	//std::cout << temp_vertices[0] << " " << temp_vertices[1] << " " << temp_vertices[2] << std::endl;
-	std::cout << "\n print vertices  index is \n";
-	std::cout << vertexIndices.size() << std::endl;
+	//std::cout << "\n print vertices  index is \n";
+	//std::cout << vertexIndices.size() << std::endl;
 
 	out_triangles = vertexIndices;
 	fclose(file);
@@ -669,6 +669,24 @@ bool loadOBJ(
 }
 //[4]ABOVE are generating cubes and loadOBJ functions ---------------[4]
 
+double cam_y = 170.f;
+double camd_x = 0.f;
+
+void move_cam_up() {
+	cam_y = cam_y - 2.f;
+}
+
+void move_cam_down() {
+	cam_y = cam_y + 2.f;
+}
+
+void rotate_cam_up() {
+	camd_x = camd_x + 2.f;
+}
+
+void rotate_cam_down() {
+	camd_x = camd_x - 2.f;
+}
 
 //[5]BELOW is main() call -------------------------------------------[5]
 static void error_callback(int error, const char* description)
@@ -680,10 +698,30 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 {
   if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
     glfwSetWindowShouldClose(window, GL_TRUE);
+  if (key == GLFW_KEY_W && action == GLFW_PRESS)
+	  move_cam_up();
+  if (key == GLFW_KEY_S && action == GLFW_PRESS)
+	  move_cam_down();
+  if (key == GLFW_KEY_I && action == GLFW_PRESS)
+	  rotate_cam_up();
+  if (key == GLFW_KEY_K && action == GLFW_PRESS)
+	  rotate_cam_down();
 }
 
 int main(void)
 {
+  std::vector<double> hip_pos_hisotry;
+
+  // contains 10 frames + data
+  // [x1,y1,z1,x2,y2,z2] 
+  // using std::deque 
+  // each keyframe add new things , remove old things,
+
+  //5 
+  // current in 10th frame, 5 - 10 frames in history.
+  // first frame, size of 0,  2nd frame - add into pos_history, 3rd frame - add into pos_history, ....... keep doing until reach a limit = 100 ,  
+  // then remove first, add from back.
+
 
   GLFWwindow* window;
   glfwSetErrorCallback(error_callback);
@@ -710,28 +748,78 @@ int main(void)
   std::vector<double> aValRotTransBone;
 
   std::string path_bvh = "LocomotionFlat01_000.bvh";
-  //std::string path_bvh = "jump.bvh";
+  //std::string path_bvh = "10_01.bvh";
 
   loadBVH(aBone, aChannelRotTransBone, nframe, aValRotTransBone,path_bvh);
 
   std::cout << "nBone:" << aBone.size() << "   aCh:" << aChannelRotTransBone.size() << std::endl;
-  for (unsigned int ib = 0; ib < aBone.size(); ++ib) {
-	  std::cout << ib << " " << aBone[ib].bname << std::endl;
-  }
 
+  int lefts;
+  int rights;
+  for (unsigned int ib = 0; ib < aBone.size(); ++ib) {
+	  if (aBone[ib].bname == "LeftShoulder")
+		  lefts = ib;
+	  else if (aBone[ib].bname == "RightShoulder")
+		  rights = ib;
+	  //std::cout << ib << " " << aBone[ib].bname << std::endl;
+  }
+  std::cout << rights << " " << lefts << std::endl;
   //uncomment for PFNN data
   double scale_ratio = 30.f;
 
-  //double scale_ratio = 250.f;
+  //jump.bvh
+  //double scale_ratio = 250.f;   
+
+  //CMU bvh
+  //double scale_ratio = 40.f; 
   while (!glfwWindowShouldClose(window))
   {
+	  //manipulate the deque hip_pos_history
+
+
+	  std::vector<double> trajectory;
+	  std::vector<double> left_spos;
+	  std::vector<double> right_spos;
+	  double cross_p[3];
+
 	  {
+
 		  static int iframe = 0;
 		  const int nch = aChannelRotTransBone.size();
 		  SetPose_BioVisionHierarchy(aBone, aChannelRotTransBone,  aValRotTransBone.data() + iframe * nch);
 
+		  trajectory = aBone[0].Pos();
+
+		  left_spos = aBone[lefts + 1].Pos();
+
+		  right_spos = aBone[rights + 1].Pos();
+
+
+
+		  //std::cout << lefts << "  " << rights<< std::endl;
+		  //std::cout << trajectory[0] << "  " << trajectory[1] << "  " << trajectory[2] << std::endl;
+		  //std::cout << left_spos[0] << "  " << left_spos[1] << "  " << left_spos[2] << std::endl;
+		  //std::cout << right_spos[0] << "  " << right_spos[1] << "  " << right_spos[2] << std::endl;
+
+		  double to_left[] = { left_spos[0] - trajectory[0],left_spos[1] - trajectory[1],left_spos[2] - trajectory[2] };
+		  double to_right[] = { right_spos[0] - trajectory[0],right_spos[2] - trajectory[2],right_spos[2] - trajectory[2] };
+		  //std::cout << to_left[0] << "  " << to_left[1] << "  " << to_left[2] << std::endl;
+		  //std::cout << to_right[0] << "  " << to_right[1] << "  " << to_right[2] << std::endl;
+		  //std::cout << "-------------------" << std::endl;
+
+		  cross_p[0] = to_left[1] * to_right[2] - to_left[2] * to_right[1];
+		  cross_p[1] = to_left[2] * to_right[0] - to_left[0] * to_right[2];
+		  cross_p[2] = to_left[0] * to_right[1] - to_left[1] * to_right[0];
+
+		  //double unit = sqrt(cross_p[0] * cross_p[0] + cross_p[1] * cross_p[1] + cross_p[2] * cross_p[2]);
+		  //cross_p[0] = cross_p[0] / unit;
+		  //cross_p[1] = cross_p[1] / unit;
+		  //cross_p[2] = cross_p[2] / unit;
+
+		  //cross_p[0] = { to_left[1] * to_right[2] - to_left[2] * to_right[1], to_left[2] * to_right[0] - to_left[0] * to_right[2], to_left[0] * to_right[1] - to_left[1] * to_right[0] };
 		  iframe = (iframe + 1) % nframe;  // repeat playing this character animation 
 	  }
+
     float ratio;
     int width, height;
     glfwGetFramebufferSize(window, &width, &height);
@@ -749,14 +837,36 @@ int main(void)
     glLoadIdentity();
 
 	// uncomment for PFNN data
-	glTranslated(0.f, 170.f, 0.f);
+	glTranslated(0.f, cam_y, 0.f);
+
+    // uncomment for 02_01.bvh data
+	//glTranslated(0.f, 170.f, 0.f);
 
     //glRotatef((float) glfwGetTime() * 50.f, 0.f, 1.f, 0.f);
 
-	//glRotatef(0.f, 180.f, 180.f, 0.f);
+	glRotatef(camd_x, 1.0f, 0.f, 0.f);
 
 	DrawBone(aBone,-1, -1,0.1, 1.0);
 
+	glColor3f(0.7f, 0.3f, 0.2f);
+	DrawSphereAt(32, 32, 0.2,trajectory[0], -180.f, trajectory[2]);
+
+	glBegin(GL_LINE_STRIP);
+	glLineWidth(3.0f);
+	glColor3f(0.7f, 0.3f, 0.2f);
+	glVertex3f(trajectory[0], -180.f, trajectory[2]);
+	glVertex3f(cross_p[0] , -180.f, cross_p[2] );
+
+	//glVertex3f(cross_p[0] - 2.f, -180.f, cross_p[2] -2.f);
+	//glVertex3f(arrow_tra[0], -180.f, arrow_tra[10]);
+	//glVertex3f(cross_p[0] + 2.f, -180.f, cross_p[2] - 2.f);
+
+
+	//glVertex3f(cross_p[0], -180.f, cross_p[2]);
+
+	//glVertex3f(trajectory[0], trajectory[1], trajectory[2]);
+	//glVertex3f(right_spos[0], -180.f, right_spos[2]);
+	glEnd();
 	//glBegin(GL_TRIANGLES);
 	//glColor3f(0.7f, 1.f, 0.f);
 	//glVertex3f(-0.6f, -0.4f, 0.f);

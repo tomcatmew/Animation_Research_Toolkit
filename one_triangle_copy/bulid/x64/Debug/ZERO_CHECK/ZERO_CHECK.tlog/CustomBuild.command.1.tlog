@@ -1,0 +1,10 @@
+^D:\ANIMATION_RESEARCH_TOOLKIT\ONE_TRIANGLE_COPY\BULID\CMAKEFILES\C2389061E974AFDE7AE177EBFCE9BA62\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SD:/Animation_Research_Toolkit/one_triangle_copy -BD:/Animation_Research_Toolkit/one_triangle_copy/bulid --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file D:/Animation_Research_Toolkit/one_triangle_copy/bulid/assignment1.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
