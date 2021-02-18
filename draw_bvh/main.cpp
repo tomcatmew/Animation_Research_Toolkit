@@ -781,7 +781,8 @@ int main(void)
 	  std::vector<double> left_spos;
 	  std::vector<double> right_spos;
 	  double cross_p[3];
-
+	  double upward[3] = {0, 10.0, 0};
+	  double horizontal_s[3];
 	  {
 
 		  static int iframe = 0;
@@ -794,29 +795,27 @@ int main(void)
 
 		  right_spos = aBone[rights + 1].Pos();
 
+		  horizontal_s[0] = right_spos[0] - left_spos[0];
+		  horizontal_s[1] = right_spos[1] - left_spos[1];
+		  horizontal_s[2] = right_spos[2] - left_spos[2];
 
+		  //crossproduct with upward direction
+		  cross_p[0] = upward[1] * horizontal_s[2] - upward[2] * horizontal_s[1];
+		  cross_p[1] = upward[2] * horizontal_s[0] - upward[0] * horizontal_s[2];
+	      cross_p[2] = upward[0] * horizontal_s[1] - upward[1] * horizontal_s[0];
 
-		  //std::cout << lefts << "  " << rights<< std::endl;
-		  //std::cout << trajectory[0] << "  " << trajectory[1] << "  " << trajectory[2] << std::endl;
-		  //std::cout << left_spos[0] << "  " << left_spos[1] << "  " << left_spos[2] << std::endl;
-		  //std::cout << right_spos[0] << "  " << right_spos[1] << "  " << right_spos[2] << std::endl;
+		  double arrow[3] = {cross_p[0] - trajectory[0],cross_p[1] - trajectory[1], cross_p[2] - trajectory[2] };
+		  // we need to unit it based on character's position, not origin.
+		  double unit = sqrt(arrow[0] * arrow[0] + arrow[1] * arrow[1] + arrow[2] * arrow[2]);
+		  int arrow_scale = 15;
+		  arrow[0] = arrow[0] / unit * arrow_scale;
+		  arrow[1] = arrow[1] / unit * arrow_scale;
+		  arrow[2] = arrow[2] / unit * arrow_scale;
+	
+		  cross_p[0] = trajectory[0] + arrow[0];
+		  cross_p[1] = trajectory[1] + arrow[1];
+		  cross_p[2] = trajectory[2] + arrow[2];
 
-		  double to_left[] = { left_spos[0] - trajectory[0],left_spos[1] - trajectory[1],left_spos[2] - trajectory[2] };
-		  double to_right[] = { right_spos[0] - trajectory[0],right_spos[2] - trajectory[2],right_spos[2] - trajectory[2] };
-		  //std::cout << to_left[0] << "  " << to_left[1] << "  " << to_left[2] << std::endl;
-		  //std::cout << to_right[0] << "  " << to_right[1] << "  " << to_right[2] << std::endl;
-		  //std::cout << "-------------------" << std::endl;
-
-		  cross_p[0] = to_left[1] * to_right[2] - to_left[2] * to_right[1];
-		  cross_p[1] = to_left[2] * to_right[0] - to_left[0] * to_right[2];
-		  cross_p[2] = to_left[0] * to_right[1] - to_left[1] * to_right[0];
-
-		  //double unit = sqrt(cross_p[0] * cross_p[0] + cross_p[1] * cross_p[1] + cross_p[2] * cross_p[2]);
-		  //cross_p[0] = cross_p[0] / unit;
-		  //cross_p[1] = cross_p[1] / unit;
-		  //cross_p[2] = cross_p[2] / unit;
-
-		  //cross_p[0] = { to_left[1] * to_right[2] - to_left[2] * to_right[1], to_left[2] * to_right[0] - to_left[0] * to_right[2], to_left[0] * to_right[1] - to_left[1] * to_right[0] };
 		  iframe = (iframe + 1) % nframe;  // repeat playing this character animation 
 	  }
 
@@ -848,6 +847,7 @@ int main(void)
 
 	DrawBone(aBone,-1, -1,0.1, 1.0);
 
+	// projection the hip point to ground
 	glColor3f(0.7f, 0.3f, 0.2f);
 	DrawSphereAt(32, 32, 0.2,trajectory[0], -180.f, trajectory[2]);
 

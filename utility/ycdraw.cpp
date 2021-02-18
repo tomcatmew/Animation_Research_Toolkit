@@ -1,5 +1,6 @@
 #include "ycdraw.h"
 #include <GLFW/glfw3.h>
+#include <deque>
 
 void YCdraw::DrawSphere
 (int nla, int nlo)
@@ -36,4 +37,30 @@ void YCdraw::DrawSphereAt
 	DrawSphere(nla, nlo);
 	glScaled(1.0 / rad, 1.0 / rad, 1.0 / rad);
 	glTranslated(-x, -y, -z);
+}
+
+void YCdraw::DrawTrajectory
+(std::deque<double> trajectory)
+{
+	::glBegin(GL_LINE_STRIP);
+	::glLineWidth(1.5f);
+	::glColor3f(0.0f, 0.5f, 0.9f);
+	for (int i = 0; i < trajectory.size()/3; i++)
+	{
+
+		::glVertex3f(trajectory[i * 3], trajectory[i * 3 + 1], trajectory[i * 3 + 2]);
+		//DrawSphereAt(32, 32, 0.2, trajectory[i * 3], trajectory[i * 3 + 1], trajectory[i * 3 + 2]);
+	}
+	::glEnd();
+}
+
+void YCdraw::DrawTrajectory_points
+(std::deque<double> trajectory)
+{
+	::glColor3f(1.0f, 1.0f, 1.0f);
+	for (int i = 0; i < trajectory.size() / 3; i = i + 9)
+	{
+		DrawSphereAt(32, 32, 0.2, trajectory[i * 3], trajectory[i * 3 + 1], trajectory[i * 3 + 2]);
+	}
+	::glEnd();
 }
