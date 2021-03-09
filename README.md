@@ -18,3 +18,12 @@ build each project folder by
 ```
 cmake -S . -B build 
 ```
+
+build project bvh_trajectory_nn folder by
+```
+mkdir build
+cd build
+cmake -DCMAKE_PREFIX_PATH=/absolute/path/to/libtorch ..
+
+and copy all .dll files from libtorch to project directory
+```
