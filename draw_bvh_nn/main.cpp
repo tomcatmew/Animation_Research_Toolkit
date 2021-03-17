@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <deque>
 #include <torch/torch.h>
-
+#include <torch/script.h>
 
 // my utilities include folder files
 #include "ycmatrix.cpp"
@@ -250,6 +250,7 @@ void SetPose_BioVisionHierarchy
 	const std::vector<CChannel_bvh>& aChannelRotTransBone,
 	const double* aVal)
 {
+
 	for (auto& bone : aBone) {
 		bone.quatRelativeRot[0] = 1.0;
 		bone.quatRelativeRot[1] = 0.0;
@@ -262,13 +263,14 @@ void SetPose_BioVisionHierarchy
 		const int iaxis = aChannelRotTransBone[ich].iaxis;
 		const bool isrot = aChannelRotTransBone[ich].isrot;
 		const double val = aVal[ich];
+		std::cout << val << std::endl;
 		assert(ibone < (int)aBone.size());
 		assert(iaxis >= 0 && iaxis < 3);
 		if (!isrot) {
 			aBone[ibone].transRelative[iaxis] = val;
 		}
 		else {
-			// this is for rotation XYZ ========== (my way store degree in quatRelativeRot instead of quenteron )
+			// this is for rotation XYZ ========== (my way store rotation degree in quatRelativeRot instead of quenteron )
 			//double ar = val * 3.1415926 / 180.0;
 			//aBone[ibone].quatRelativeRot[1 + iaxis] = ar;
 			// this is for rotation XYZ ==========
@@ -525,7 +527,7 @@ void DrawBone(
 			is_selected, ielem_selected, aBone,
 			rad_bone_sphere, rad_rot_hndlr);
 	}
-	// draw edges whilte
+	// draw edges white
 	for (unsigned int ibone = 0; ibone < aBone.size(); ++ibone) {
 		const RIGbone& bone = aBone[ibone];
 		const int ibone_p = aBone[ibone].ibone_parent;
@@ -714,10 +716,64 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 
 int main(void)
 {
+	std::cout << std::fixed;
+	torch::jit::script::Module module;
+	try {
+		module = torch::jit::load("bvhmodule2.pt");
+	}
+	catch (const c10::Error& e) {
+		std::cerr << "error load model \n";
+		return -1;
+	}
+
+	std::vector<torch::jit::IValue> inputs;
+
+	std::fstream in("test.bvh");
+	std::string line;
+	std::vector<float> float_vector;
+
+	std::getline(in, line);
+	float readvalue;
+	std::stringstream ss(line);
+
+	while (ss >> readvalue)
+	{
+		float_vector.push_back(readvalue);
+	}
+
+	for (int i = 0; i < float_vector.size(); i++)
+	{
+		std::cout << float_vector[i] << std::endl;
+	}
+	std::cout << std::endl << "size:" << float_vector.size() << std::endl;
+
+	torch::Tensor input_para = torch::from_blob(float_vector.data(), { 96 });
+
+	std::cout << "print Input tensor" << std::endl;
+	std::cout << std::fixed << input_para << std::endl;
+	inputs.push_back(input_para);
+
+	at::Tensor output_para = module.forward(inputs).toTensor();
+	std::cout << "print Output tensor size: " << std::endl;
+	//std::cout << output << std::endl;
+	std::cout << output_para.sizes()[0] << std::endl;
+
+	std::vector<double> last_vector;
+	for (int i = 0; i < output_para.sizes()[0]; i++)
+	{
+		double pos_val = output_para[i].item<double>();
+		
+		if (i == 1) {
+			last_vector.push_back(pos_val - 180.0f);
+		}
+		else {
+			last_vector.push_back(pos_val);
+		}
+	}
+
+
 	std::deque<double> pos_history;
 
-	torch::Tensor tensor = torch::rand({ 2, 3 });
-	std::cout << tensor << std::endl;
   
   // contains 10 frames + data
   // [x1,y1,z1,x2,y2,z2] 
@@ -757,8 +813,11 @@ int main(void)
   //std::string path_bvh = "10_01.bvh";
 
   loadBVH(aBone, aChannelRotTransBone, nframe, aValRotTransBone,path_bvh);
-
-  std::cout << "nBone:" << aBone.size() << "   aCh:" << aChannelRotTransBone.size() << std::endl;
+  std::cout << "length here :" << std::endl;
+  const double* ntt = aValRotTransBone.data();
+  std::cout << typeid(ntt[5]).name() << std::endl;
+  std::cout << ntt[5] << std::endl;
+  std::cout << "nBone:" << aBone.size() << "   aCh:" << aValRotTransBone.size() << std::endl;
 
   int lefts;
   int rights;
@@ -771,9 +830,26 @@ int main(void)
   }
   //std::cout << rights << " " << lefts << std::endl;
 
-
+  std::cout << "size of avalrotaransobome :" << typeid(aValRotTransBone).name() << std::endl;
+  std::cout << "size of last vector :" << typeid(last_vector).name() << std::endl;
   //initialization
-  SetPose_BioVisionHierarchy(aBone, aChannelRotTransBone, aValRotTransBone.data());
+
+  std::cout << "======aval======== : " << aValRotTransBone.size() << std::endl;
+  for (int i = 0; i < aValRotTransBone.size(); i++)
+  {
+	  std::cout << aValRotTransBone[i] << std::endl;
+  }
+  std::cout << "======last_vector======== : " << last_vector.size() << std::endl;
+  for (int i = 0; i < last_vector.size(); i++)
+  {
+	  std::cout << last_vector[i] << std::endl;
+  }
+  std::cout << "======last_vector======== : END" << std::endl;
+  //SetPose_BioVisionHierarchy(aBone, aChannelRotTransBone, aValRotTransBone.data());
+  SetPose_BioVisionHierarchy(aBone, aChannelRotTransBone, last_vector.data());
+
+
+
   std::vector<double> start_pos;
   start_pos = aBone[0].Pos();
   for (int i = 0; i < 300; i++) {
@@ -790,7 +866,7 @@ int main(void)
 
 
   //uncomment for PFNN data
-  double scale_ratio = 30.f;
+  double scale_ratio = 30.0f;
 
   //jump.bvh
   //double scale_ratio = 250.f;   
@@ -799,6 +875,9 @@ int main(void)
   //double scale_ratio = 40.f; 
   while (!glfwWindowShouldClose(window))
   {
+
+
+
 	  //manipulate the deque hip_pos_history
 
 	  std::vector<double> trajectory;
@@ -808,10 +887,45 @@ int main(void)
 	  double upward[3] = {0, 10.0, 0};
 	  double horizontal_s[3];
 	  {
-
 		  static int iframe = 0;
 		  const int nch = aChannelRotTransBone.size();
-		  SetPose_BioVisionHierarchy(aBone, aChannelRotTransBone,  aValRotTransBone.data() + iframe * nch);
+		  std::cout << "======frame :" << iframe << " =========" << std::endl;
+
+		  float_vector.clear();
+		  for (int i = 0; i < last_vector.size(); i++) {
+			  float_vector.push_back((float)last_vector[i]);
+		  }
+		  torch::Tensor input_tens = torch::from_blob(float_vector.data(), { 96 });
+
+		  //std::cout << "print Input tensor" << std::endl;
+		  //std::cout << input_tens << std::endl;
+		  inputs.clear();
+		  inputs.push_back(input_tens);
+
+		  at::Tensor output_tens = module.forward(inputs).toTensor();
+		  //std::cout << "print Output tensor" << std::endl;
+		  //std::cout << output << std::endl;
+		  //std::cout << output_tens.sizes()[0] << std::endl;
+
+
+		  //std::cout << last_vector.size() << std::endl;
+
+		  last_vector.clear();
+		  
+		  for (int i = 0; i < output_tens.sizes()[0]; i++)
+		  {
+			  double new_pos_val = output_tens[i].item<double>();
+			  std::cout << new_pos_val << std::endl;
+			  if (i == 1) {
+				  last_vector.push_back(new_pos_val - 180.0f);
+			  }
+			  else {
+				  last_vector.push_back(new_pos_val);
+			  }
+		  }
+
+		  //SetPose_BioVisionHierarchy(aBone, aChannelRotTransBone, aValRotTransBone.data() + iframe * nch);
+		  SetPose_BioVisionHierarchy(aBone, aChannelRotTransBone, last_vector.data());
 
 		  trajectory = aBone[0].Pos();
 
@@ -822,7 +936,7 @@ int main(void)
 		  pos_history.push_front(trajectory[2]);
 		  pos_history.push_front(-180.f);
 		  pos_history.push_front(trajectory[0]);
-		  std::cout << pos_history.size() << std::endl;
+		  //std::cout << pos_history.size() << std::endl;
 		  left_spos = aBone[lefts + 1].Pos();
 
 		  right_spos = aBone[rights + 1].Pos();

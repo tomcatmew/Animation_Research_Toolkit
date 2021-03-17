@@ -806,6 +806,7 @@ int main(void)
 
 		  static int iframe = 0;
 		  const int nch = aChannelRotTransBone.size();
+		  std::cout << "===frame: " <<iframe << std::endl;
 		  SetPose_BioVisionHierarchy(aBone, aChannelRotTransBone,  aValRotTransBone.data() + iframe * nch);
 
 		  trajectory = aBone[0].Pos();
