@@ -719,7 +719,7 @@ int main(void)
 	std::cout << std::fixed;
 	torch::jit::script::Module module;
 	try {
-		module = torch::jit::load("bvhmodule2.pt");
+		module = torch::jit::load("bvhmodulenew_xyz_trans2.pt");
 	}
 	catch (const c10::Error& e) {
 		std::cerr << "error load model \n";
@@ -873,6 +873,7 @@ int main(void)
 
   //CMU bvh
   //double scale_ratio = 40.f; 
+
   while (!glfwWindowShouldClose(window))
   {
 
@@ -889,7 +890,8 @@ int main(void)
 	  {
 		  static int iframe = 0;
 		  const int nch = aChannelRotTransBone.size();
-		  std::cout << "======frame :" << iframe << " =========" << std::endl;
+		  std::cout << "===frame: " << iframe << std::endl;
+		  
 
 		  float_vector.clear();
 		  for (int i = 0; i < last_vector.size(); i++) {
@@ -915,7 +917,7 @@ int main(void)
 		  for (int i = 0; i < output_tens.sizes()[0]; i++)
 		  {
 			  double new_pos_val = output_tens[i].item<double>();
-			  std::cout << new_pos_val << std::endl;
+			  //std::cout << new_pos_val << std::endl;
 			  if (i == 1) {
 				  last_vector.push_back(new_pos_val - 180.0f);
 			  }
@@ -963,6 +965,7 @@ int main(void)
 		  cross_p[2] = trajectory[2] + arrow[2];
 
 		  iframe = (iframe + 1) % nframe;  // repeat playing this character animation 
+		  std::cout << "======frame :" << iframe << " =========" << std::endl;
 	  }
 
     float ratio;
