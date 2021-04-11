@@ -27,3 +27,11 @@ cmake -DCMAKE_PREFIX_PATH=/absolute/path/to/libtorch ..
 
 and copy all .dll files from libtorch to project directory
 ```
+
+
+## To Do :
+- [ ] Successfully use the trained netwokr in C++ environment and display a decent animation result.
+- [ ] Finish the the training
+
+## Update Note:
+2021.4.11. update the test_nn for testing the C++ pytroch inplementation
