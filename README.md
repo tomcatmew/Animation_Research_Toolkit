@@ -30,6 +30,8 @@ and copy all .dll files from libtorch to project directory
 
 
 ## To Do :
+- [ ] understand the paper fourier feature network
+- [ ] checkout related paper from phased functioned neural network to find out previous simple model of training bvh files
 - [ ] Successfully use the trained netwokr in C++ environment and display a decent animation result.
 - [ ] Finish the the training
 
