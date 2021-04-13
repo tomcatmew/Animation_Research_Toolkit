@@ -32,8 +32,8 @@ and copy all .dll files from libtorch to project directory
 ## To Do :
 - [ ] understand the paper fourier feature network
 - [ ] checkout related paper from phased functioned neural network to find out previous simple model of training bvh files
-- [ ] Successfully use the trained netwokr in C++ environment and display a decent animation result.
-- [x] Further improve the NN to allow prediction of rotation besides transformation. may need quaternion ?
+- [x] Successfully use the trained netwokr in C++ environment and display a decent animation result.
+- [ ] Further improve the NN to allow prediction of rotation besides transformation. may need quaternion ?
 - [ ] Finish the the training
 
 ## Update Note:
