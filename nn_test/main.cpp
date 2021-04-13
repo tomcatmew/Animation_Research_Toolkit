@@ -25,7 +25,7 @@ int main(void)
 	std::cout << std::fixed;
 	torch::jit::script::Module module;
 	try {
-		module = torch::jit::load("bvhmodulenew_xyz_trans2.pt");
+		module = torch::jit::load("traced.pt");
 	}
 	catch (const c10::Error& e) {
 		std::cerr << "error load model \n";

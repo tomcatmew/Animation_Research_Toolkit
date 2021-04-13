@@ -719,7 +719,7 @@ int main(void)
 	std::cout << std::fixed;
 	torch::jit::script::Module module;
 	try {
-		module = torch::jit::load("bvhmodulenew_xyz_trans2.pt");
+		module = torch::jit::load("traced.pt");
 	}
 	catch (const c10::Error& e) {
 		std::cerr << "error load model \n";
@@ -741,16 +741,16 @@ int main(void)
 		float_vector.push_back(readvalue);
 	}
 
-	for (int i = 0; i < float_vector.size(); i++)
-	{
-		std::cout << float_vector[i] << std::endl;
-	}
-	std::cout << std::endl << "size:" << float_vector.size() << std::endl;
+	//for (int i = 0; i < float_vector.size(); i++)
+	//{
+	//	std::cout << float_vector[i] << std::endl;
+	//}
+	//std::cout << std::endl << "size:" << float_vector.size() << std::endl;
 
 	torch::Tensor input_para = torch::from_blob(float_vector.data(), { 96 });
 
-	std::cout << "print Input tensor" << std::endl;
-	std::cout << std::fixed << input_para << std::endl;
+	//std::cout << "print Input tensor" << std::endl;
+	//std::cout << std::fixed << input_para << std::endl;
 	inputs.push_back(input_para);
 
 	at::Tensor output_para = module.forward(inputs).toTensor();
@@ -759,6 +759,8 @@ int main(void)
 	std::cout << output_para.sizes()[0] << std::endl;
 
 	std::vector<double> last_vector;
+	std::vector<double> last_vector_nn;
+
 	for (int i = 0; i < output_para.sizes()[0]; i++)
 	{
 		double pos_val = output_para[i].item<double>();
@@ -771,7 +773,17 @@ int main(void)
 		}
 	}
 
+	for (int i = 0; i < output_para.sizes()[0]; i++)
+	{
+		double pos_val = output_para[i].item<double>();
 
+		if (i == 1) {
+			last_vector_nn.push_back(pos_val);
+		}
+		else {
+			last_vector_nn.push_back(pos_val);
+		}
+	}
 	std::deque<double> pos_history;
 
   
@@ -830,8 +842,8 @@ int main(void)
   }
   //std::cout << rights << " " << lefts << std::endl;
 
-  std::cout << "size of avalrotaransobome :" << typeid(aValRotTransBone).name() << std::endl;
-  std::cout << "size of last vector :" << typeid(last_vector).name() << std::endl;
+  //std::cout << "size of avalrotaransobome :" << typeid(aValRotTransBone).name() << std::endl;
+  //std::cout << "size of last vector :" << typeid(last_vector).name() << std::endl;
   //initialization
 
   std::cout << "======aval======== : " << aValRotTransBone.size() << std::endl;
@@ -894,8 +906,8 @@ int main(void)
 		  
 
 		  float_vector.clear();
-		  for (int i = 0; i < last_vector.size(); i++) {
-			  float_vector.push_back((float)last_vector[i]);
+		  for (int i = 0; i < last_vector_nn.size(); i++) {
+			  float_vector.push_back((float)last_vector_nn[i]);
 		  }
 		  torch::Tensor input_tens = torch::from_blob(float_vector.data(), { 96 });
 
@@ -913,6 +925,7 @@ int main(void)
 		  //std::cout << last_vector.size() << std::endl;
 
 		  last_vector.clear();
+		  last_vector_nn.clear();
 		  
 		  for (int i = 0; i < output_tens.sizes()[0]; i++)
 		  {
@@ -923,6 +936,18 @@ int main(void)
 			  }
 			  else {
 				  last_vector.push_back(new_pos_val);
+			  }
+		  }
+
+		  for (int i = 0; i < output_tens.sizes()[0]; i++)
+		  {
+			  double new_pos_val = output_tens[i].item<double>();
+			  //std::cout << new_pos_val << std::endl;
+			  if (i == 1) {
+				  last_vector_nn.push_back(new_pos_val);
+			  }
+			  else {
+				  last_vector_nn.push_back(new_pos_val);
 			  }
 		  }
 
