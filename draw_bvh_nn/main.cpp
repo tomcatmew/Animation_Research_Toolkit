@@ -291,6 +291,46 @@ void SetPose_BioVisionHierarchy
 	//UpdateBoneRotTrans_XYZ(aBone);
 	UpdateBoneRotTrans(aBone);
 }
+
+
+void SetPose_BioVisionHierarchy_Quat
+(std::vector<RIGbone>& aBone,
+	const std::vector<CChannel_bvh>& aChannelRotTransBone,
+	const double* aVal)
+{
+	const int nch = aChannelRotTransBone.size();
+	for (int ich = 0; ich < nch; ++ich) {
+		const int ibone = aChannelRotTransBone[ich].ibone;
+		const int iaxis = aChannelRotTransBone[ich].iaxis;
+		const bool isrot = aChannelRotTransBone[ich].isrot;
+		const double val = aVal[ich];
+		std::cout << val << " " ;
+		if (ich == nch - 1)
+		{
+			std::cout << std::endl;
+		}
+
+		assert(ibone < (int)aBone.size());
+		assert(iaxis >= 0 && iaxis < 3);
+		if (!isrot) {
+			aBone[ibone].transRelative[iaxis] = val;
+		}
+		else {
+
+			int check_point = ich % 3;
+			if (check_point == 0)
+			{
+				int mul = ich / 3;
+				int start = mul * 4 - 1;
+				double dq[4] = { aVal[start],aVal[start + 1] ,aVal[start + 2] ,aVal[start + 3] };
+				Copy_Quat(aBone[ibone].quatRelativeRot, dq);
+			}
+			// the way of quaternion method   =======
+		}
+	}
+	//UpdateBoneRotTrans_XYZ(aBone);
+	UpdateBoneRotTrans(aBone);
+}
 //[1]ABOVE ARE UTILITY FUNCTIONS -------------------------------------[1]
 
 
@@ -719,7 +759,11 @@ int main(void)
 	std::cout << std::fixed;
 	torch::jit::script::Module module;
 	try {
-		module = torch::jit::load("traced.pt");
+		// only XYZ transform
+		//module = torch::jit::load("traced_only_xyz_transf.pt");
+
+		// rotation and tranform
+		module = torch::jit::load("q_traced.pt");
 	}
 	catch (const c10::Error& e) {
 		std::cerr << "error load model \n";
@@ -728,7 +772,13 @@ int main(void)
 
 	std::vector<torch::jit::IValue> inputs;
 
-	std::fstream in("test.bvh");
+	//only XYZ tranform 
+	//std::fstream in("test.bvh");
+
+	// rotation and transform
+	std::fstream in("test_q2.bvh");
+
+
 	std::string line;
 	std::vector<float> float_vector;
 
@@ -747,7 +797,11 @@ int main(void)
 	//}
 	//std::cout << std::endl << "size:" << float_vector.size() << std::endl;
 
-	torch::Tensor input_para = torch::from_blob(float_vector.data(), { 96 });
+	// only XYZ tranform
+	//torch::Tensor input_para = torch::from_blob(float_vector.data(), { 96 });
+
+	// rotation with transform 
+	torch::Tensor input_para = torch::from_blob(float_vector.data(), { 127 });
 
 	//std::cout << "print Input tensor" << std::endl;
 	//std::cout << std::fixed << input_para << std::endl;
@@ -854,7 +908,7 @@ int main(void)
   std::cout << "======last_vector======== : " << last_vector.size() << std::endl;
   for (int i = 0; i < last_vector.size(); i++)
   {
-	  std::cout << last_vector[i] << std::endl;
+	  std::cout << i << " : " <<last_vector[i] << std::endl;
   }
   std::cout << "======last_vector======== : END" << std::endl;
   //SetPose_BioVisionHierarchy(aBone, aChannelRotTransBone, aValRotTransBone.data());
@@ -909,7 +963,11 @@ int main(void)
 		  for (int i = 0; i < last_vector_nn.size(); i++) {
 			  float_vector.push_back((float)last_vector_nn[i]);
 		  }
-		  torch::Tensor input_tens = torch::from_blob(float_vector.data(), { 96 });
+		  //only XYZ tranform
+		  //torch::Tensor input_tens = torch::from_blob(float_vector.data(), { 96 });
+
+		  //rotation and transform
+		  torch::Tensor input_tens = torch::from_blob(float_vector.data(), { 127 });
 
 		  //std::cout << "print Input tensor" << std::endl;
 		  //std::cout << input_tens << std::endl;
@@ -951,8 +1009,15 @@ int main(void)
 			  }
 		  }
 
+		  //original
 		  //SetPose_BioVisionHierarchy(aBone, aChannelRotTransBone, aValRotTransBone.data() + iframe * nch);
-		  SetPose_BioVisionHierarchy(aBone, aChannelRotTransBone, last_vector.data());
+
+		  //only XYZ transform
+		  //SetPose_BioVisionHierarchy(aBone, aChannelRotTransBone, last_vector.data());
+
+
+		  SetPose_BioVisionHierarchy_Quat(aBone, aChannelRotTransBone, last_vector.data());
+		  
 
 		  trajectory = aBone[0].Pos();
 

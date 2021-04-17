@@ -272,6 +272,9 @@ void SetPose_BioVisionHierarchy
 
 			// the way of quaternion method   =======
 			
+			//calculate z y X rotation's cooresponding [w,x,y,z] quaternion one by one and use quat*quat to mutiple them together. 
+			//finally we will get the [w,x,y,z] quaternion representation and store it into the memory. 
+			//when we draw the bones, we use [x,x,y,z] and transform to 4x4 rotation matrix then simply mutiple to our object.
 			const double ar = val * 3.1415926 / 180.0;
 			double v0[3] = { 0,0,0 };
 			v0[iaxis] = 1.0;
