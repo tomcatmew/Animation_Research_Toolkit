@@ -37,5 +37,5 @@ and copy all .dll files from libtorch to project directory
 - [ ] Finish the the training
 
 ## Update Note:
-2021.4.11. update the test_nn for testing the C++ pytroch inplementation
-2021.4.13. The NN successfully predict the XYZ transformation of the root position. Now works on rotation.
+* 2021.4.11. update the test_nn for testing the C++ pytroch inplementation
+* 2021.4.13. The NN successfully predict the XYZ transformation of the root position. Now works on rotation.
