@@ -9,9 +9,6 @@
 #include <cassert>
 #include <stdlib.h>
 #include <deque>
-#include <torch/torch.h>
-#include <torch/script.h>
-
 // my utilities include folder files
 #include "ycmatrix.cpp"
 #include "ycdraw.cpp"
@@ -250,7 +247,6 @@ void SetPose_BioVisionHierarchy
 	const std::vector<CChannel_bvh>& aChannelRotTransBone,
 	const double* aVal)
 {
-
 	for (auto& bone : aBone) {
 		bone.quatRelativeRot[0] = 1.0;
 		bone.quatRelativeRot[1] = 0.0;
@@ -263,20 +259,22 @@ void SetPose_BioVisionHierarchy
 		const int iaxis = aChannelRotTransBone[ich].iaxis;
 		const bool isrot = aChannelRotTransBone[ich].isrot;
 		const double val = aVal[ich];
-		std::cout << val << std::endl;
 		assert(ibone < (int)aBone.size());
 		assert(iaxis >= 0 && iaxis < 3);
 		if (!isrot) {
 			aBone[ibone].transRelative[iaxis] = val;
 		}
 		else {
-			// this is for rotation XYZ ========== (my way store rotation degree in quatRelativeRot instead of quenteron )
+			// this is for rotation XYZ ========== (my way store degree in quatRelativeRot instead of quenteron )
 			//double ar = val * 3.1415926 / 180.0;
 			//aBone[ibone].quatRelativeRot[1 + iaxis] = ar;
 			// this is for rotation XYZ ==========
 
 			// the way of quaternion method   =======
 			
+			//calculate z y X rotation's cooresponding [w,x,y,z] quaternion one by one and use quat*quat to mutiple them together. 
+			//finally we will get the [w,x,y,z] quaternion representation and store it into the memory. 
+			//when we draw the bones, we use [x,x,y,z] and transform to 4x4 rotation matrix then simply mutiple to our object.
 			const double ar = val * 3.1415926 / 180.0;
 			double v0[3] = { 0,0,0 };
 			v0[iaxis] = 1.0;
@@ -292,7 +290,6 @@ void SetPose_BioVisionHierarchy
 	UpdateBoneRotTrans(aBone);
 }
 
-
 void SetPose_BioVisionHierarchy_Quat
 (std::vector<RIGbone>& aBone,
 	const std::vector<CChannel_bvh>& aChannelRotTransBone,
@@ -304,15 +301,13 @@ void SetPose_BioVisionHierarchy_Quat
 		const int iaxis = aChannelRotTransBone[ich].iaxis;
 		const bool isrot = aChannelRotTransBone[ich].isrot;
 		const double val = aVal[ich];
-		std::cout << val << " " ;
+		std::cout << val << " ";
 		if (ich == nch - 1)
 		{
 			std::cout << std::endl;
 		}
 
-		assert(ibone < (int)aBone.size());
-		assert(iaxis >= 0 && iaxis < 3);
-		if (!isrot) {
+		if (ich == 0 || ich == 1 || ich == 2) {
 			aBone[ibone].transRelative[iaxis] = val;
 		}
 		else {
@@ -331,10 +326,56 @@ void SetPose_BioVisionHierarchy_Quat
 	//UpdateBoneRotTrans_XYZ(aBone);
 	UpdateBoneRotTrans(aBone);
 }
+
 //[1]ABOVE ARE UTILITY FUNCTIONS -------------------------------------[1]
 
 
 //[2]load BVH file main program --------------------------------------[2]
+
+bool loadQ(std::vector<double>& aValueQ, int& nframe, const std::string& path_q)
+{
+	int nchannel = 127;
+	std::ifstream fin;
+	fin.open(path_q.c_str());
+	if (!fin.is_open()) {
+		std::cout << "cannot open file" << std::endl;
+		return false;
+	}
+	//
+	aValueQ.resize(nframe * nchannel);
+	std::string line;
+	for (int iframe = 0; iframe < nframe; ++iframe) {
+		std::getline(fin, line);
+		//line = rig_v3q::MyReplace(line, '\t', ' ');   Prof.Umetani replace tab to space
+		if (line[line.size() - 1] == '\n') line.erase(line.size() - 1); // remove the newline code
+		if (line[line.size() - 1] == '\r') line.erase(line.size() - 1); // remove the newline code
+
+		//my split 
+		std::stringstream ss(line);
+		std::istream_iterator<std::string> begin(ss);
+		std::istream_iterator<std::string> end;
+		std::vector<std::string> aToken(begin, end);
+
+		//print out the result
+		//std::copy(aToken.begin(), aToken.end(), std::ostream_iterator<std::string>(std::cout, "\n"));
+
+		// prof.umetani's split
+		//std::vector<std::string> aToken = rig_v3q::MySplit(line, ' ');
+		//std::cout << aToken.size() << " " << aChannelRotTransBone.size() << std::endl;
+
+		for (int ich = 0; ich < nchannel; ++ich) {
+			//aValueRotTransBone[iframe * nchannel + ich] = rig_v3q::myStod(aToken[ich]);
+			if (ich == 1)
+			{
+				aValueQ[iframe * nchannel + ich] = atof(aToken[ich].c_str()) - 180;
+			}
+			else {
+				aValueQ[iframe * nchannel + ich] = atof(aToken[ich].c_str());
+			}
+		}
+	}
+}
+
 bool loadBVH(std::vector<RIGbone>& aBone,
 	std::vector<CChannel_bvh>& aChannelRotTransBone,
 	int& nframe,
@@ -567,7 +608,7 @@ void DrawBone(
 			is_selected, ielem_selected, aBone,
 			rad_bone_sphere, rad_rot_hndlr);
 	}
-	// draw edges white
+	// draw edges whilte
 	for (unsigned int ibone = 0; ibone < aBone.size(); ++ibone) {
 		const RIGbone& bone = aBone[ibone];
 		const int ibone_p = aBone[ibone].ibone_parent;
@@ -648,6 +689,7 @@ void geneCUBE(std::vector<double>& out_vertices, std::vector<unsigned int>& out_
 	};
 
 }
+
 
 bool loadOBJ(
 	const char* path,
@@ -756,88 +798,6 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 
 int main(void)
 {
-	std::cout << std::fixed;
-	torch::jit::script::Module module;
-	try {
-		// only XYZ transform
-		// module = torch::jit::load("traced_only_xyz_transf.pt");
-
-		// rotation and tranform
-		module = torch::jit::load("q_traced.pt");
-	}
-	catch (const c10::Error& e) {
-		std::cerr << "error load model \n";
-		return -1;
-	}
-
-	std::vector<torch::jit::IValue> inputs;
-
-	//only XYZ tranform 
-	//std::fstream in("test.bvh");
-
-	// rotation and transform
-	std::fstream in("test_q2.bvh");
-
-
-	std::string line;
-	std::vector<float> float_vector;
-
-	std::getline(in, line);
-	float readvalue;
-	std::stringstream ss(line);
-
-	while (ss >> readvalue)
-	{
-		float_vector.push_back(readvalue);
-	}
-
-	//for (int i = 0; i < float_vector.size(); i++)
-	//{
-	//	std::cout << float_vector[i] << std::endl;
-	//}
-	//std::cout << std::endl << "size:" << float_vector.size() << std::endl;
-
-	// only XYZ tranform
-	torch::Tensor input_para = torch::from_blob(float_vector.data(), { 127 });
-
-	// rotation with transform 
-	//torch::Tensor input_para = torch::from_blob(float_vector.data(), { 127 });
-
-	//std::cout << "print Input tensor" << std::endl;
-	//std::cout << std::fixed << input_para << std::endl;
-	inputs.push_back(input_para);
-
-	at::Tensor output_para = module.forward(inputs).toTensor();
-	std::cout << "print Output tensor size: " << std::endl;
-	//std::cout << output << std::endl;
-	std::cout << output_para.sizes()[0] << std::endl;
-
-	std::vector<double> last_vector;
-	std::vector<double> last_vector_nn;
-
-	for (int i = 0; i < output_para.sizes()[0]; i++)
-	{
-		double pos_val = output_para[i].item<double>();
-		
-		if (i == 1) {
-			last_vector.push_back(pos_val - 180.0f);
-		}
-		else {
-			last_vector.push_back(pos_val);
-		}
-	}
-
-	for (int i = 0; i < output_para.sizes()[0]; i++)
-	{
-		double pos_val = output_para[i].item<double>();
-
-		if (i == 1) {
-			last_vector_nn.push_back(pos_val);
-		}
-		else {
-			last_vector_nn.push_back(pos_val);
-		}
-	}
 	std::deque<double> pos_history;
 
   
@@ -875,16 +835,20 @@ int main(void)
   int nframe = 0;
   std::vector<double> aValRotTransBone;
 
-  std::string path_bvh = "LocomotionFlat01_000.bvh";
+  std::string path_bvh = "model/LocomotionFlat01_000.bvh";
   //std::string path_bvh = "10_01.bvh";
 
   loadBVH(aBone, aChannelRotTransBone, nframe, aValRotTransBone,path_bvh);
-  std::cout << "length here :" << std::endl;
-  const double* ntt = aValRotTransBone.data();
-  std::cout << typeid(ntt[5]).name() << std::endl;
-  std::cout << ntt[5] << std::endl;
-  std::cout << "nBone:" << aBone.size() << "   aCh:" << aValRotTransBone.size() << std::endl;
 
+
+  std::vector<double> aValueQ;
+  int qframe = 8169;
+  std::string path_q = "model/output_direct_radian_q.bvh";
+
+  loadQ(aValueQ, qframe, path_q);
+
+  std::cout << "nBone:" << aBone.size() << "   aCh:" << aChannelRotTransBone.size() << std::endl;
+  std::cout << "qSize: " << aValueQ.size() << std::endl;
   int lefts;
   int rights;
   for (unsigned int ib = 0; ib < aBone.size(); ++ib) {
@@ -896,26 +860,9 @@ int main(void)
   }
   //std::cout << rights << " " << lefts << std::endl;
 
-  //std::cout << "size of avalrotaransobome :" << typeid(aValRotTransBone).name() << std::endl;
-  //std::cout << "size of last vector :" << typeid(last_vector).name() << std::endl;
+
   //initialization
-
-  std::cout << "======aval======== : " << aValRotTransBone.size() << std::endl;
-  for (int i = 0; i < aValRotTransBone.size(); i++)
-  {
-	  std::cout << aValRotTransBone[i] << std::endl;
-  }
-  std::cout << "======last_vector======== : " << last_vector.size() << std::endl;
-  for (int i = 0; i < last_vector.size(); i++)
-  {
-	  std::cout << i << " : " <<last_vector[i] << std::endl;
-  }
-  std::cout << "======last_vector======== : END" << std::endl;
-  //SetPose_BioVisionHierarchy(aBone, aChannelRotTransBone, aValRotTransBone.data());
-  SetPose_BioVisionHierarchy(aBone, aChannelRotTransBone, last_vector.data());
-
-
-
+  SetPose_BioVisionHierarchy(aBone, aChannelRotTransBone, aValRotTransBone.data());
   std::vector<double> start_pos;
   start_pos = aBone[0].Pos();
   for (int i = 0; i < 300; i++) {
@@ -932,19 +879,15 @@ int main(void)
 
 
   //uncomment for PFNN data
-  double scale_ratio = 30.0f;
+  double scale_ratio = 30.f;
 
   //jump.bvh
   //double scale_ratio = 250.f;   
 
   //CMU bvh
   //double scale_ratio = 40.f; 
-
   while (!glfwWindowShouldClose(window))
   {
-
-
-
 	  //manipulate the deque hip_pos_history
 
 	  std::vector<double> trajectory;
@@ -955,70 +898,11 @@ int main(void)
 	  double horizontal_s[3];
 	  {
 		  static int iframe = 0;
-		  const int nch = aChannelRotTransBone.size();
-		  std::cout << "===frame: " << iframe << std::endl;
-		  
-
-		  float_vector.clear();
-		  for (int i = 0; i < last_vector_nn.size(); i++) {
-			  float_vector.push_back((float)last_vector_nn[i]);
-		  }
-		  //only XYZ tranform
-		  //torch::Tensor input_tens = torch::from_blob(float_vector.data(), { 96 });
-
-		  //rotation and transform
-		  torch::Tensor input_tens = torch::from_blob(float_vector.data(), { 127 });
-
-		  //std::cout << "print Input tensor" << std::endl;
-		  //std::cout << input_tens << std::endl;
-		  inputs.clear();
-		  inputs.push_back(input_tens);
-
-		  at::Tensor output_tens = module.forward(inputs).toTensor();
-		  //std::cout << "print Output tensor" << std::endl;
-		  //std::cout << output << std::endl;
-		  //std::cout << output_tens.sizes()[0] << std::endl;
-
-
-		  //std::cout << last_vector.size() << std::endl;
-
-		  last_vector.clear();
-		  last_vector_nn.clear();
-		  
-		  for (int i = 0; i < output_tens.sizes()[0]; i++)
-		  {
-			  double new_pos_val = output_tens[i].item<double>();
-			  //std::cout << new_pos_val << std::endl;
-			  if (i == 1) {
-				  last_vector.push_back(new_pos_val - 180.0f);
-			  }
-			  else {
-				  last_vector.push_back(new_pos_val);
-			  }
-		  }
-
-		  for (int i = 0; i < output_tens.sizes()[0]; i++)
-		  {
-			  double new_pos_val = output_tens[i].item<double>();
-			  //std::cout << new_pos_val << std::endl;
-			  if (i == 1) {
-				  last_vector_nn.push_back(new_pos_val);
-			  }
-			  else {
-				  last_vector_nn.push_back(new_pos_val);
-			  }
-		  }
-
-		  //original
-		  //SetPose_BioVisionHierarchy(aBone, aChannelRotTransBone, aValRotTransBone.data() + iframe * nch);
-
-		  //only XYZ transform
-		  //SetPose_BioVisionHierarchy(aBone, aChannelRotTransBone, last_vector.data());
-
-
-		  SetPose_BioVisionHierarchy_Quat(aBone, aChannelRotTransBone, last_vector.data());
-		  
-
+		  //const int nch = aChannelRotTransBone.size();
+		  const int nch = 127;
+		  std::cout << "===frame: " <<iframe << std::endl;
+		  //SetPose_BioVisionHierarchy(aBone, aChannelRotTransBone,  aValRotTransBone.data() + iframe * nch);
+		  SetPose_BioVisionHierarchy_Quat(aBone, aChannelRotTransBone, aValueQ.data() + iframe * nch);
 		  trajectory = aBone[0].Pos();
 
 		  //update position history
@@ -1028,7 +912,7 @@ int main(void)
 		  pos_history.push_front(trajectory[2]);
 		  pos_history.push_front(-180.f);
 		  pos_history.push_front(trajectory[0]);
-		  //std::cout << pos_history.size() << std::endl;
+		  std::cout << pos_history.size() << std::endl;
 		  left_spos = aBone[lefts + 1].Pos();
 
 		  right_spos = aBone[rights + 1].Pos();
@@ -1054,8 +938,10 @@ int main(void)
 		  cross_p[1] = trajectory[1] + arrow[1];
 		  cross_p[2] = trajectory[2] + arrow[2];
 
-		  iframe = (iframe + 1) % nframe;  // repeat playing this character animation 
-		  std::cout << "======frame :" << iframe << " =========" << std::endl;
+		  // repeat playing this character animation 
+		  //iframe = (iframe + 1) % nframe;  
+		  iframe = (iframe + 1) % qframe;
+		  std::cout << " Frame : " << iframe << std::endl;
 	  }
 
     float ratio;

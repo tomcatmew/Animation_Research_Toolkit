@@ -848,6 +848,7 @@ int main(void)
 		  cross_p[2] = trajectory[2] + arrow[2];
 
 		  iframe = (iframe + 1) % nframe;  // repeat playing this character animation 
+		  std::cout << " Frame : " << iframe << std::endl;
 	  }
 
     float ratio;
