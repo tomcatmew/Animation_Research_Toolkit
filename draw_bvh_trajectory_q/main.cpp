@@ -759,6 +759,14 @@ bool loadOBJ(
 
 double cam_y = 170.f;
 double camd_x = 0.f;
+double axis_r = 0.f;
+
+void swtich_cam_axis() {
+	if (axis_r == 0.f)
+		axis_r = 30.f;
+	else
+		axis_r = 0.f;
+}
 
 void move_cam_up() {
 	cam_y = cam_y - 2.f;
@@ -794,6 +802,8 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 	  rotate_cam_up();
   if (key == GLFW_KEY_K && action == GLFW_PRESS)
 	  rotate_cam_down();
+  if (key == GLFW_KEY_P && action == GLFW_PRESS)
+	  swtich_cam_axis();
 }
 
 int main(void)
@@ -835,15 +845,17 @@ int main(void)
   int nframe = 0;
   std::vector<double> aValRotTransBone;
 
-  std::string path_bvh = "model/LocomotionFlat01_000.bvh";
+  //std::string path_bvh = "model/LocomotionFlat01_000.bvh";
+  std::string path_bvh = "model/cmu_dance.bvh";
   //std::string path_bvh = "10_01.bvh";
 
   loadBVH(aBone, aChannelRotTransBone, nframe, aValRotTransBone,path_bvh);
 
 
   std::vector<double> aValueQ;
-  int qframe = 8169;
-  std::string path_q = "model/output_direct_radian_q.bvh";
+  //int qframe = 137;
+  int qframe = 450;
+  std::string path_q = "model/cmu_dance_Q_short.bvh";
 
   loadQ(aValueQ, qframe, path_q);
 
@@ -968,7 +980,7 @@ int main(void)
 
     //glRotatef((float) glfwGetTime() * 50.f, 0.f, 1.f, 0.f);
 
-	glRotatef(camd_x, 1.0f, 0.f, 0.f);
+	glRotatef(camd_x, 1.0f, axis_r, 0.f);
 	glEnable(GL_DEPTH_TEST);
 	DrawBone(aBone,-1, -1,0.1, 1.0);
 

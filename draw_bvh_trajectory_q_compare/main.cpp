@@ -289,10 +289,137 @@ void SetPose_BioVisionHierarchy
 	//UpdateBoneRotTrans_XYZ(aBone);
 	UpdateBoneRotTrans(aBone);
 }
+
+void SetPose_BioVisionHierarchy_Quat
+(std::vector<RIGbone>& aBone,
+	const std::vector<CChannel_bvh>& aChannelRotTransBone,
+	const double* aVal)
+{
+	const int nch = aChannelRotTransBone.size();
+	for (int ich = 0; ich < nch; ++ich) {
+		const int ibone = aChannelRotTransBone[ich].ibone;
+		const int iaxis = aChannelRotTransBone[ich].iaxis;
+		const bool isrot = aChannelRotTransBone[ich].isrot;
+		const double val = aVal[ich];
+		std::cout << val << " ";
+		if (ich == nch - 1)
+		{
+			std::cout << std::endl;
+		}
+
+		if (ich == 0 || ich == 1 || ich == 2) {
+			aBone[ibone].transRelative[iaxis] = val;
+		}
+		else {
+
+			int check_point = ich % 3;
+			if (check_point == 0)
+			{
+				int mul = ich / 3;
+				int start = mul * 4 - 1;
+				double dq[4] = { aVal[start],aVal[start + 1] ,aVal[start + 2] ,aVal[start + 3] };
+				Copy_Quat(aBone[ibone].quatRelativeRot, dq);
+			}
+			// the way of quaternion method   =======
+		}
+	}
+	//UpdateBoneRotTrans_XYZ(aBone);
+	UpdateBoneRotTrans(aBone);
+}
+
+void SetPose_BioVisionHierarchy_Quat_o
+(std::vector<RIGbone>& aBone,
+	const std::vector<CChannel_bvh>& aChannelRotTransBone,
+	const double* aVal)
+{
+	const int nch = aChannelRotTransBone.size();
+	for (int ich = 0; ich < nch; ++ich) {
+		const int ibone = aChannelRotTransBone[ich].ibone;
+		const int iaxis = aChannelRotTransBone[ich].iaxis;
+		const bool isrot = aChannelRotTransBone[ich].isrot;
+		const double val = aVal[ich];
+		std::cout << val << " ";
+		if (ich == nch - 1)
+		{
+			std::cout << std::endl;
+		}
+		//change X axis
+		if (ich == 0 ) {
+			aBone[ibone].transRelative[iaxis] = val;
+		}
+		else if ( ich == 1) {
+			aBone[ibone].transRelative[iaxis] = val;
+		}
+		//change Z axis
+		else if (ich == 2) {
+			aBone[ibone].transRelative[iaxis] = val + 10.f;
+		}
+		else {
+
+			int check_point = ich % 3;
+			if (check_point == 0)
+			{
+				int mul = ich / 3;
+				int start = mul * 4 - 1;
+				double dq[4] = { aVal[start],aVal[start + 1] ,aVal[start + 2] ,aVal[start + 3] };
+				Copy_Quat(aBone[ibone].quatRelativeRot, dq);
+			}
+			// the way of quaternion method   =======
+		}
+	}
+	//UpdateBoneRotTrans_XYZ(aBone);
+	UpdateBoneRotTrans(aBone);
+}
+
 //[1]ABOVE ARE UTILITY FUNCTIONS -------------------------------------[1]
 
 
 //[2]load BVH file main program --------------------------------------[2]
+
+bool loadQ(std::vector<double>& aValueQ, int& nframe, const std::string& path_q)
+{
+	int nchannel = 127;
+	std::ifstream fin;
+	fin.open(path_q.c_str());
+	if (!fin.is_open()) {
+		std::cout << "cannot open file" << std::endl;
+		return false;
+	}
+	//
+	aValueQ.resize(nframe * nchannel);
+	std::string line;
+	for (int iframe = 0; iframe < nframe; ++iframe) {
+		std::getline(fin, line);
+		//line = rig_v3q::MyReplace(line, '\t', ' ');   Prof.Umetani replace tab to space
+		if (line[line.size() - 1] == '\n') line.erase(line.size() - 1); // remove the newline code
+		if (line[line.size() - 1] == '\r') line.erase(line.size() - 1); // remove the newline code
+
+		//my split 
+		std::stringstream ss(line);
+		std::istream_iterator<std::string> begin(ss);
+		std::istream_iterator<std::string> end;
+		std::vector<std::string> aToken(begin, end);
+
+		//print out the result
+		//std::copy(aToken.begin(), aToken.end(), std::ostream_iterator<std::string>(std::cout, "\n"));
+
+		// prof.umetani's split
+		//std::vector<std::string> aToken = rig_v3q::MySplit(line, ' ');
+		//std::cout << aToken.size() << " " << aChannelRotTransBone.size() << std::endl;
+
+		for (int ich = 0; ich < nchannel; ++ich) {
+			//aValueRotTransBone[iframe * nchannel + ich] = rig_v3q::myStod(aToken[ich]);
+			if (ich == 1)
+			{
+				aValueQ[iframe * nchannel + ich] = atof(aToken[ich].c_str()) - 180;
+			}
+			else {
+				aValueQ[iframe * nchannel + ich] = atof(aToken[ich].c_str());
+			}
+		}
+	}
+}
+
 bool loadBVH(std::vector<RIGbone>& aBone,
 	std::vector<CChannel_bvh>& aChannelRotTransBone,
 	int& nframe,
@@ -546,6 +673,44 @@ void DrawBone(
 		glEnd();
 	}
 }
+
+void DrawBone_green(
+	const std::vector<RIGbone>& aBone,
+	int ibone_selected,
+	int ielem_selected,
+	double rad_bone_sphere,
+	double rad_rot_hndlr)
+{
+	glDisable(GL_LIGHTING);
+	glDisable(GL_TEXTURE_2D);
+	glPointSize(3);
+	for (unsigned int iskel = 0; iskel < aBone.size(); ++iskel) {
+		const bool is_selected = (int)iskel == ibone_selected;
+		Draw_RigBone(iskel,
+			is_selected, ielem_selected, aBone,
+			rad_bone_sphere, rad_rot_hndlr);
+	}
+	// draw edges whilte
+	for (unsigned int ibone = 0; ibone < aBone.size(); ++ibone) {
+		const RIGbone& bone = aBone[ibone];
+		const int ibone_p = aBone[ibone].ibone_parent;
+		if (ibone_p < 0 || ibone_p >= (int)aBone.size()) { continue; }
+		const RIGbone& bone_p = aBone[ibone_p];
+		bool is_selected_p = (ibone_p == ibone_selected);
+		if (is_selected_p) { glColor3d(1.0, 1.0, 1.0); }
+		else { glColor3d(0.0, 0.6, 0.0); }
+		glLineWidth(4);
+		glBegin(GL_LINES);
+		// understand what is GLVertex
+		std::vector<double> tempt_cur = bone.Pos();
+		std::vector<double> tempt_par = bone_p.Pos();
+		glVertex3f(tempt_cur[0], tempt_cur[1], tempt_cur[2]);
+		glVertex3f(tempt_par[0], tempt_par[1], tempt_par[2]);
+		//opengl::myGlVertex(bone.Pos());
+		//opengl::myGlVertex(bone_p.Pos());
+		glEnd();
+	}
+}
 //[3]ABOVE are draw functions ---------------------------------------[3]
 
 
@@ -606,6 +771,7 @@ void geneCUBE(std::vector<double>& out_vertices, std::vector<unsigned int>& out_
 	};
 
 }
+
 
 bool loadOBJ(
 	const char* path,
@@ -675,6 +841,14 @@ bool loadOBJ(
 
 double cam_y = 170.f;
 double camd_x = 0.f;
+double axis_r = 0.f;
+
+void swtich_cam_axis() {
+	if (axis_r == 0.f)
+		axis_r = 30.f;
+	else
+		axis_r = 0.f;
+}
 
 void move_cam_up() {
 	cam_y = cam_y - 2.f;
@@ -710,11 +884,14 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 	  rotate_cam_up();
   if (key == GLFW_KEY_K && action == GLFW_PRESS)
 	  rotate_cam_down();
+  if (key == GLFW_KEY_P && action == GLFW_PRESS)
+	  swtich_cam_axis();
 }
 
 int main(void)
 {
 	std::deque<double> pos_history;
+	std::deque<double> pos_history_o;
 
   
   // contains 10 frames + data
@@ -751,13 +928,48 @@ int main(void)
   int nframe = 0;
   std::vector<double> aValRotTransBone;
 
-  std::string path_bvh = "models/05_07.bvh";
+  std::string path_bvh = "model/LocomotionFlat01_000.bvh";
+  //std::string path_bvh = "model/cmu/cmu_dance_skeleton.bvh";
   //std::string path_bvh = "10_01.bvh";
 
   loadBVH(aBone, aChannelRotTransBone, nframe, aValRotTransBone,path_bvh);
 
-  std::cout << "nBone:" << aBone.size() << "   aCh:" << aChannelRotTransBone.size() << std::endl;
 
+  std::vector<double> aValueQ;
+  int qframe = 137;
+  //int qframe = 450;
+
+  //std::string path_q = "model/new_137_walk_integer_quat_normlized.bvh";
+  std::string path_q = "model/new_137_walk_integer_512p_quat_normlized.bvh";
+  //std::string path_q = "model/cmu/new_137_g_1_core_2p_dance_quat_normlized.bvh";
+  loadQ(aValueQ, qframe, path_q);
+
+
+  // ----------- original
+  std::vector<RIGbone> aBone_o;
+  std::vector<CChannel_bvh> aChannelRotTransBone_o;
+  int nframe_o = 0;
+  std::vector<double> aValRotTransBone_o;
+
+  std::string path_bvh_o = "model/LocomotionFlat01_000.bvh";
+  //std::string path_bvh_o = "model/cmu/cmu_dance_skeleton.bvh";
+
+
+  loadBVH(aBone_o, aChannelRotTransBone_o, nframe_o, aValRotTransBone_o, path_bvh_o);
+
+
+  std::vector<double> aValueQ_o;
+  int qframe_o = 137;
+  //int qframe_o = 450;
+
+  std::string path_q_0 = "model/ffn_pure_out_q.bvh";
+  //std::string path_q_0 = "model/cmu/cmu_dance_Q_short.bvh";
+
+  loadQ(aValueQ_o, qframe_o, path_q_0);
+  // ----------- original
+
+  std::cout << "nBone:" << aBone.size() << "   aCh:" << aChannelRotTransBone.size() << std::endl;
+  std::cout << "qSize: " << aValueQ.size() << std::endl;
   int lefts;
   int rights;
   for (unsigned int ib = 0; ib < aBone.size(); ++ib) {
@@ -787,6 +999,25 @@ int main(void)
   }
 
 
+  // ----------- original
+	//initialization
+  SetPose_BioVisionHierarchy(aBone_o, aChannelRotTransBone_o, aValRotTransBone_o.data());
+  std::vector<double> start_pos_o;
+  start_pos_o = aBone_o[0].Pos();
+  for (int i = 0; i < 300; i++) {
+	  if ((i + 1) % 3 == 2) {
+		  pos_history_o.push_back(-180.0f);
+	  }
+	  else if ((i + 1) % 3 == 1) {
+		  pos_history_o.push_back(start_pos_o[0]);
+	  }
+	  else {
+		  pos_history_o.push_back(start_pos_o[2]);
+	  }
+  }
+  // ----------- original
+
+
   //uncomment for PFNN data
   double scale_ratio = 30.f;
 
@@ -806,12 +1037,15 @@ int main(void)
 	  double upward[3] = {0, 10.0, 0};
 	  double horizontal_s[3];
 	  {
-
 		  static int iframe = 0;
-		  const int nch = aChannelRotTransBone.size();
+		  static int iframe_o = 0;
+		  //const int nch = aChannelRotTransBone.size();
+		  const int nch = 127;
+		  const int nch_o = 127;
 		  std::cout << "===frame: " <<iframe << std::endl;
-		  SetPose_BioVisionHierarchy(aBone, aChannelRotTransBone,  aValRotTransBone.data() + iframe * nch);
-
+		  //SetPose_BioVisionHierarchy(aBone, aChannelRotTransBone,  aValRotTransBone.data() + iframe * nch);
+		  SetPose_BioVisionHierarchy_Quat(aBone, aChannelRotTransBone, aValueQ.data() + iframe * nch);
+		  SetPose_BioVisionHierarchy_Quat_o(aBone_o, aChannelRotTransBone_o, aValueQ_o.data() + iframe_o * nch_o);
 		  trajectory = aBone[0].Pos();
 
 		  //update position history
@@ -847,7 +1081,10 @@ int main(void)
 		  cross_p[1] = trajectory[1] + arrow[1];
 		  cross_p[2] = trajectory[2] + arrow[2];
 
-		  iframe = (iframe + 1) % nframe;  // repeat playing this character animation 
+		  // repeat playing this character animation 
+		  //iframe = (iframe + 1) % nframe;  
+		  iframe = (iframe + 1) % qframe;
+		  iframe_o = (iframe_o + 1) % qframe_o;
 		  std::cout << " Frame : " << iframe << std::endl;
 	  }
 
@@ -875,9 +1112,10 @@ int main(void)
 
     //glRotatef((float) glfwGetTime() * 50.f, 0.f, 1.f, 0.f);
 
-	glRotatef(camd_x, 1.0f, 0.f, 0.f);
+	glRotatef(camd_x, 1.0f, axis_r, 0.f);
 	glEnable(GL_DEPTH_TEST);
 	DrawBone(aBone,-1, -1,0.1, 1.0);
+	DrawBone_green(aBone_o, -1, -1, 0.1, 1.0);
 
 	// projection the hip point to ground
 	glColor3f(0.7f, 0.3f, 0.2f);
